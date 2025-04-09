@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Skycoders Airline Management System</title>
+  <!-- Link to the external CSS file -->
+  <link rel="stylesheet" href="reg.css">
+</head>
+<body>
+  <!-- Header with Transparent Navbar -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <!-- Replace logo.png with your logo file -->
+        <img src="logo.png" alt="Skycoders Logo">
+        <span>Skycoders Airline Management System</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="#">Home</a></li>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Contact Us</a></li>
+        <li><a href="#">Book Flight</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Main Registration Section -->
+  <main>
+    <section class="register-section">
+    <div class="content">
+        <div class="info">
+            <h1>Welcome Aboard!!</h1>
+            <p>"Soar beyond limits – your journey starts here."</p>
+        </div>
+      <div class="register-container">
+        <h2>Register</h2>
+        
+        <form id="registerForm">
+          <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" placeholder="Enter your username" required>
+          </div>
+          <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" placeholder="Enter your password" required>
+          </div>
+          <button type="submit" onclick="registerUser()">Register</button>
+        </form>
+      </div>
+    </div>
+    </section>
+  </main>
+
+    <script>
+
+      document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault(); // Prevent form from submitting the traditional way
+  
+      });
+
+      var Module = {
+        onRuntimeInitialized: function() {
+          Module.ccall('init_persistent_fs', null, [], []);
+  
+          // Create wrappers for the C functions so they can be called from JavaScript.
+          window.registerUserC = Module.cwrap('register_user', 'number', ['string', 'string']);
+        }
+      };
+  
+      // Function to register a user using the C function.
+      function registerUser() {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+        let res = window.registerUserC(username, password);
+        if (res === 0) {
+          alert("SignUp successful!");
+
+           /* setTimeout(()=> {
+              window.location.href = "login.html";
+            }, 3000);*/
+        }  else {
+          alert("An Error Occurred. Please try again");
+        }
+      }
+
+    </script>
+    <script src="interface.js"></script>
+</body>
+</html>

@@ -1,0 +1,274 @@
+/* Global Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+  
+  body, html {
+    height: 100%;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  }
+  
+  body {
+    background: url('fl.jpg') no-repeat center center/cover;
+  }
+
+  body::before {
+    content: "";
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.2); /* adjust the opacity (0.5) as desired */
+    z-index: -1;
+  }
+  
+  
+  /* Navbar Styles */
+  .navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px 15px;
+    background-color: rgba(253, 253, 253, 0.2);
+    backdrop-filter: blur(15px);
+    border-radius: 15px;
+    margin: 15px;
+    position: fixed;
+    width: calc(100% - 30px);
+    top: 0;
+    z-index: 1000;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    font-size: 2em;
+    font-weight: bold;
+    color: #fff;
+  }
+  
+  .logo img {
+    width: 80px;
+    height: 60px;
+    margin-right: 10px;
+  }
+
+  .logo span {
+    color: rgba(3, 20, 95, 0.562);
+    font-size: .9em;
+  }
+  
+  .nav-menu {
+    list-style-type: none;
+    display: flex;
+  }
+  
+  .nav-menu li {
+    margin-left: 20px;
+  }
+  
+  .nav-menu li a {
+    text-decoration: none;
+    color: #fff;
+    padding: 15px 15px;
+    border-radius: 10px;
+    transition: background-color 0.3s, transform 0.3s;
+  }
+  
+  .nav-menu li a:hover {
+    background-color: rgba(9, 28, 68, 0.562);
+    transform: scale(1.05);
+  }
+  
+  /* Registration Section */
+  .register-section {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    padding-top: 30px; /* Extra space for fixed navbar */
+  }
+  
+  .register-container {
+    background: rgba(11, 36, 44, 0.644);
+    padding: 40px;
+    border-radius: 25px;
+    border: none;
+    width: 90%;
+    max-width: 400px;
+    box-sizing: border-box;
+  }
+  
+  .register-container h2 {
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 2em;
+    color: #ffffff;
+  }
+  
+  /* Content Area (if used elsewhere) */
+  .content {
+    width: 90%;
+    max-width: 1000px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 20px auto;
+    box-sizing: border-box;
+  }
+  
+  .info h1 {
+    font-size: 100px;
+    color: rgba(255, 255, 255, 0.87);
+    margin-bottom: 12px;
+  }
+  
+  .info p {
+    font-size: 20px;
+    color: rgba(255, 255, 255, 0.74);
+    margin-left: 10px;
+    font-style: italic ;
+  }
+  
+  /* Form Styles */
+  .form-group {
+    margin-bottom: 20px;
+  }
+  
+  .form-group label {
+    display: block;
+    color: #ffffff;
+    margin-bottom: 10px;
+    margin-left: 10px;
+  }
+  
+  .form-group input {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ffffffef;
+    color: rgba(27, 28, 29, 0.849);
+    border-radius: 10px;
+    outline: none;
+    font-size: 16px;
+  }
+  
+  button[type="submit"] {
+    width: 100%;
+    padding: 12px;
+    background-color: #007BFF;
+    border: none;
+    border-radius: 15px;
+    color: #fff;
+    font-size: 1em;
+    cursor: pointer;
+    transition: background-color 0.3s;
+  }
+  
+  button[type="submit"]:hover {
+    background-color: #0056b3;
+  }
+  
+  /* Responsive Styles */
+  
+  /* For screens smaller than 768px */
+  @media (max-width: 768px) {
+    /* Reduce navbar font size and logo image size */
+    .logo {
+      font-size: 1.6em;
+    }
+    .logo img {
+      width: 60px;
+      height: 45px;
+    }
+    
+    /* Reduce gaps between nav items */
+    .nav-menu li {
+      margin-left: 15px;
+    }
+    
+    /* Optional: Center nav items */
+    .navbar {
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .info h1 {
+        font-size: 60px;
+        
+        margin-left: 20px;
+      }
+    
+    .nav-menu {
+      margin-top: 10px;
+      justify-content: center;
+    }
+  }
+  
+  /* For screens smaller than 600px */
+  @media (max-width: 600px) {
+    .nav-menu {
+      flex-direction: row;
+      align-items: center;
+    }
+    
+    .nav-menu li {
+      margin-left: 0;
+      margin-top: 10px;
+    }
+
+    .nav-menu li a{
+        font-size: 12px;
+        margin-top: 10px;
+      }
+    
+    .navbar {
+      flex-direction: column;
+      align-items: flex-start;
+    }
+    
+    /* Adjust registration container padding and font sizes */
+    .register-container {
+      padding: 30px;
+    }
+    
+    .register-container h2 {
+      font-size: 1.8em;
+    }
+    
+    /* Adjust info text sizes */
+    .info h1 {
+      font-size: 30px;
+      margin-top: 200px;
+      margin-left: 20px;
+    }
+    
+    .info p {
+      font-size: 20px;
+      margin-bottom: 10px;
+    }
+
+    .content {
+        flex-direction: column;
+    }
+  }
+  
+  /* For very small screens (e.g., below 400px) */
+  @media (max-width: 400px) {
+    .navbar {
+      padding: 8px 10px;
+    }
+    
+    button[type="submit"] {
+      padding: 10px;
+      font-size: 0.9em;
+    }
+    
+    .form-group input {
+      padding: 8px;
+      font-size: 14px;
+    }
+  }
+  

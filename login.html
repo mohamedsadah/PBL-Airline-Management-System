@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Skycoders Airline Management System - Login</title>
+  <link rel="stylesheet" href="login.css" />
+</head>
+<body>
+  <!-- Transparent Navbar -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="logo.png" alt="Skycoders Logo" />
+        <span>Skycoders Airline Management System</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="landing.html">Home</a></li>
+        <li><a href="contact.html">Contact Us</a></li>
+        <li><a href="bookFlight.html">Book Flight</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <!-- Login Section -->
+  <main>
+    <section class="login-section">
+      <div class="content">
+        <div class="login-container">
+          <h2>Login</h2>
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="username">Username</label>
+              <input type="text" id="username" placeholder="Enter your username" required />
+            </div>
+            <div class="form-group">
+              <label for="password">Password</label>
+              <input type="password" id="password" placeholder="Enter your password" required />
+            </div>
+            <button type="submit" onclick="loginUser()">Login</button>
+            <p class="signup-link">Don't have an account? <a href="reg.html">Sign Up</a></p>
+          </form>
+        </div>
+        <div class="info">
+          <h1>Welcome Back!</h1>
+          <p>"Board your Digital runway - we're clear for takeoff."</p>
+        </div>
+      </div>
+    </section>
+  </main>
+  <script>
+
+    document.getElementById('loginForm').addEventListener('submit', function(e) {
+      e.preventDefault(); // Prevent form from submitting the traditional way
+
+    });
+
+    var Module = {
+        onRuntimeInitialized: function() {
+          Module.ccall('init_persistent_fs', null, [], []);
+  
+          // Create wrappers for the C functions so they can be called from JavaScript.
+          window.loginC = Module.cwrap('login', 'number', ['string', 'string']);
+  
+        }
+      };
+
+       // Function to perform login validation using the C function.
+    function loginUser() {
+        let username = document.getElementById('username').value;
+        let password = document.getElementById('password').value;
+        let res = window.loginC(username, password);
+        if (res === 1) {
+          alert('Login successful!');
+        } else if (res === 0) {
+         alert('Invalid credentials');
+        } else {
+          alert('Error reading credentials');
+        }
+      }
+
+  </script>
+
+  <script src="interface.js"></script>
+</body>
+</html>

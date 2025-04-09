@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Persistent Login Demo with Emscripten</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+    }
+    .container {
+      max-width: 400px;
+      margin: auto;
+    }
+    input {
+      padding: 8px;
+      margin: 4px 0;
+      width: 100%;
+    }
+    button {
+      padding: 10px;
+      margin: 8px 0;
+      width: 100%;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h2>User Registration</h2>
+    <input type="text" id="regUsername" placeholder="Username">
+    <input type="password" id="regPassword" placeholder="Password">
+    <button onclick="registerUser()">Register</button>
+    
+    <h2>User Login</h2>
+    <input type="text" id="loginUsername" placeholder="Username">
+    <input type="password" id="loginPassword" placeholder="Password">
+    <button onclick="loginUser()">Login</button>
+    
+    <p id="result"></p>
+  </div>
+
+  <script>
+    // Wait for the Emscripten runtime to be initialized.
+    var Module = {
+      onRuntimeInitialized: function() {
+        Module.ccall('init_persistent_fs', null, [], []);
+
+        // Create wrappers for the C functions so they can be called from JavaScript.
+        window.registerUserC = Module.cwrap('register_user', 'number', ['string', 'string']);
+        window.loginC = Module.cwrap('login', 'number', ['string', 'string']);
+
+      }
+    };
+
+    // Function to register a user using the C function.
+    function registerUser() {
+      let username = document.getElementById('regUsername').value;
+      let password = document.getElementById('regPassword').value;
+      let res = window.registerUserC(username, password);
+      if (res === 0) {
+        // After registration, sync the file system to persist the changes.
+        document.getElementById('result').innerText = 'Registration successful.';
+      } else {
+        document.getElementById('result').innerText = 'Registration failed.';
+      }
+    }
+
+    // Function to perform login validation using the C function.
+    function loginUser() {
+      let username = document.getElementById('loginUsername').value;
+      let password = document.getElementById('loginPassword').value;
+      let res = window.loginC(username, password);
+      if (res === 1) {
+        document.getElementById('result').innerText = 'Login successful!';
+      } else if (res === 0) {
+        document.getElementById('result').innerText = 'Invalid credentials.';
+      } else {
+        document.getElementById('result').innerText = 'Error reading credentials.';
+      }
+    }
+  </script>
+  <!-- Include the generated Emscripten JavaScript file (compiled from main.c) -->
+  <script src="interface.js"></script>
+</body>
+</html>
