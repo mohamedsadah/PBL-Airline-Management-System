@@ -1,0 +1,283 @@
+body {
+    margin: 0;
+    font-family: 'Outfit', sans-serif;
+    color: #222;
+    background-color: #fff;
+  }
+
+  /* === Navbar === */
+  .navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px 40px;
+    position: absolute;
+    width: 90%;
+    top: 0;
+    z-index: 1000;
+    color: #5f5c5c;
+    border-radius: 20px;
+    margin: 10px 20px;
+    margin-bottom: 50px;
+  }
+  
+  .logo {
+    display: flex;
+    align-items: center;
+    font-size: 1.5rem;
+    font-weight: bold;
+  }
+  
+  .logo img {
+    height: 80px;
+    margin-right: 10px;
+  }
+  
+  .nav-menu {
+    list-style: none;
+    display: flex;
+    gap: 20px;
+  }
+  
+  .nav-menu li a {
+    color: #fff;
+    text-decoration: none;
+    font-weight: bold;
+    padding: 20px 15px;
+    border-radius: 8px;
+    transition: background 0.3s;
+  }
+  
+  .nav-menu li a:hover {
+    background-color: rgba(14, 123, 160, 0.644);
+  }
+  
+  .hero {
+    background: url('/images/fl.jpg') no-repeat center center/cover;
+    height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    position: relative;
+  }
+  
+  .hero-overlay {
+    background: rgba(0, 0, 0, 0.5);
+    padding: 30px;
+    border-radius: 12px;
+    color: #fff;
+  }
+  
+  .hero-overlay h1 {
+    font-size: 4rem;
+    margin-bottom: 10px;
+  }
+  
+  .hero-overlay p {
+    font-size: 1.5rem;
+    font-weight: 300;
+  }
+  
+  .project-info {
+    padding: 50px 20px;
+    max-width: 1200px;
+    margin: 5px auto;
+    text-align: center;
+    border-radius: 20px;
+  }
+  
+  .project-info h2 {
+    font-size: 2.5rem;
+    margin-bottom: 20px;
+    color: #005792;
+  }
+  
+  .project-info p {
+    font-size: 1.1rem;
+    line-height: 1.6;
+    color: #444;
+  }
+  
+  .team {
+    padding: 50px 20px;
+    background-color: #d3d1d1;
+    text-align: center;
+  }
+  
+  .team h2 {
+    font-size: 2.5rem;
+    color: #005792;
+    margin-bottom: 40px;
+  }
+  
+  .team-member {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin: 20px auto;
+    max-width: 1300px;
+    
+    border-radius: 12px;
+    overflow: hidden;
+    padding: 20px;
+  }
+  
+  .team-member img {
+    width: 500px;
+    height: 500px;
+    object-fit: cover;
+    border-radius: 15px;
+    margin-left: 20px;
+  }
+  
+  .team-member .info {
+    text-align: center;
+    flex: 1;
+    padding: 0 20px;
+  }
+  
+  .team-member h3 {
+    margin: 0 0 10px;
+    color: #333;
+    font-size: 4rem;
+  }
+  
+  .team-member p {
+    margin: 0;
+    font-size: 2.5rem;
+    color: #555;
+  }
+
+  /* === Footer === */
+  .footer {
+    background-color: #0b2c3a;
+    color: white;
+    padding: 40px 60px;
+  }
+  
+  .footer-content {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: space-between;
+    align-items: center;
+    gap: 30px;
+  }
+  
+  .logo-footer {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    flex: 1;
+  }
+  
+  .logo-footer img {
+    height: 80px;
+  }
+  
+  .footer-info {
+    flex: 2;
+    font-size: 1.2em;
+    line-height: 1.6;
+  }
+  
+
+
+
+
+  
+  @media (max-width: 1024px) {
+    .team-container {
+      flex-direction: column;
+      align-items: center;
+    }
+  
+    .team-member {
+      flex-direction: column-reverse;
+      text-align: center;
+      padding: 20px;
+    }
+  
+    .member-image img {
+      width: 150px;
+      height: 150px;
+      margin: 0 auto;
+    }
+  
+    .member-info {
+      padding: 10px 0;
+    }
+  
+    .hero h1 {
+      font-size: 3em;
+    }
+  }
+  
+  @media (max-width: 768px) {
+    .hero {
+      padding: 60px 10px;
+    }
+  
+    .hero h1 {
+      font-size: 2.5em;
+    }
+  
+    .about-description {
+      padding: 15px;
+      font-size: 1em;
+    }
+  
+    .team-heading {
+      font-size: 1.8em;
+    }
+  
+    .team-member {
+      flex-direction: column-reverse;
+      padding: 15px;
+      gap: 50px;
+    }
+  
+    .member-image img {
+      width: 100px;
+      height: 100px;
+      margin: 15px;
+    }
+  
+    .member-info h3{
+      font-size: 1.1em;
+    }
+  
+    .member-info p{
+      font-size: 0.95em;
+      margin-bottom: 15px;
+    }
+
+    .footer-content {
+        flex-direction: column;
+        text-align: center;
+      }
+  }
+  
+  @media (max-width: 480px) {
+    .hero h1 {
+      font-size: 2em;
+    }
+  
+    .about-description {
+      font-size: 0.95em;
+    }
+  
+    .team-heading {
+      font-size: 1.5em;
+    }
+  
+    .member-image img {
+      width: 100px;
+      height: 100px;
+    }
+  
+    .member-info p {
+      font-size: 0.9em;
+    }
+  }
+  

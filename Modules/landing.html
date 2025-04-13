@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Skycoders Airline | Fly Smart</title>
+  <link rel="stylesheet" href="./landing.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <!-- Navbar -->
+  <header>
+    <nav class="navbar">
+      <div class="logo">
+        <img src="/images/logo.png" alt="Skycoders Logo">
+        <span>Skycoders Airline Management System</span>
+      </div>
+      <ul class="nav-menu">
+        <li><a href="./landing.html">Home</a></li>
+        <li><a href="./about.html">About Us</a></li>
+        <li><a href="./login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+    <!-- Background with slideshow -->
+  <section class="hero-section">
+    <div class="slideshow">
+      <div class="slide" style="background-image: url('/images/fl.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl3.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/flight.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl4.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl5.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl6.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl7.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/fl8.jpg');"></div>
+    </div>
+    
+    <!-- Booking Form Overlay -->
+    <div class="booking-box">
+      <h2>Book Your Flight</h2>
+      <form>
+        <div class="form-row">
+          <input type="text" placeholder="Departure">
+          <input type="text" placeholder="Destination">
+        </div>
+        <div class="form-row">
+          <input type="date" placeholder="Depart Date">
+          <input type="date" placeholder="Return Date">
+        </div>
+        <div class="form-row radio-buttons">
+          <label><input type="radio" name="trip" checked> One Way</label>
+          <label><input type="radio" name="trip"> Round Trip</label>
+        </div>
+        <button type="submit">Check Availability</button>
+      </form>
+    </div>
+
+  </section>
+  
+  <!-- Quick Access Buttons -->
+  <section class="quick-actions">
+    <button class="action-btn">Book Flight</button>
+    <button class="action-btn">Check Flight Status</button>
+    <button class="action-btn">Manage Booking</button>
+  </section>
+
+  <!-- Info Section -->
+  <section class="info-section">
+    <div class="info-card">
+      <img src="/images/comfort.jpg" alt="In-flight comfort">
+      <h3>Unmatched Comfort</h3>
+      <p>Enjoy our state-of-the-art aircrafts with plush seating, entertainment and more.</p>
+    </div>
+    <div class="info-card">
+      <img src="/images/glob.jpg" alt="Global Destinations">
+      <h3>Global Destinations</h3>
+      <p>Connect to over 150+ cities around the world with seamless service.</p>
+    </div>
+    <div class="info-card">
+      <img src="/images/support.jpg" alt="24/7 Support">
+      <h3>24/7 Support</h3>
+      <p>Our customer support is available anytime to assist you wherever you are.</p>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-content">
+      <div class="logo-footer">
+        <img src="/images/logo.png" alt="Logo">
+        <p>Skycoders Airline Management System</p>
+      </div>
+      <div class="footer-info">
+        <p>Email: support@skycoders.com</p>
+        <p>Phone: +91-80099-99999</p>
+        <p>Address: GEU Deemed University</p>
+      </div>
+
+      <div>
+        <img src="/images/geu-logo.png" alt="GEU-LOGO">
+      </div>
+    </div>
+  </footer>
+
+  <script src="./landing.js"></script>
+</body>
+</html>

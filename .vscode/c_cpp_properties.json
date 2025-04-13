@@ -1,15 +1,19 @@
 {
   "configurations": [
     {
-      "name": "windows-gcc-x86",
+      "name": "Emscripten",
+      "compilerPath": "C:/Users/ibnaa/emsdk/upstream/emscripten/emcc.bat",
       "includePath": [
-        "${workspaceFolder}/**"
+        "${workspaceFolder}/**",
+        "C:/Users/ibnaa/emsdk/upstream/emscripten/system/include",
+        "C:/Users/ibnaa/emsdk/upstream/emscripten/cache/sysroot/include"
       ],
-      "defines": [],
-      "compilerPath": "C:/MinGW/bin/gcc.exe",
-      "cStandard": "${default}",
-      "cppStandard": "${default}",
-      "intelliSenseMode": "windows-gcc-x86"
+      "defines": [
+        "__EMSCRIPTEN__"
+      ],
+      "intelliSenseMode": "windows-gcc-x64",
+      "cStandard": "c11",
+      "cppStandard": "c++17"
     }
   ],
   "version": 4

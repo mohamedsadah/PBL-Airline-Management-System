@@ -12,7 +12,7 @@
   }
   
   body {
-    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('fl.jpg') no-repeat center center/cover;
+    background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.6)), url('/images/fl.jpg') no-repeat center center/cover;
   }
   
   /* Navbar Styles */
@@ -52,6 +52,7 @@
   
   .nav-menu li {
     margin-left: 20px;
+    font-weight: bold;
   }
   
   .nav-menu li a {
@@ -63,7 +64,7 @@
   }
   
   .nav-menu li a:hover {
-    background-color: rgba(11, 36, 44, 0.644);
+    background-color: rgba(14, 123, 160, 0.644);
     transform: scale(1.05);
   }
   

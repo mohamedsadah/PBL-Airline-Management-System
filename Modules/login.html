@@ -4,20 +4,20 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Skycoders Airline Management System - Login</title>
-  <link rel="stylesheet" href="login.css" />
+  <link rel="stylesheet" href="./login.css" />
 </head>
 <body>
   <!-- Transparent Navbar -->
   <header>
     <nav class="navbar">
       <div class="logo">
-        <img src="logo.png" alt="Skycoders Logo" />
+        <img src="/images/logo.png" alt="Skycoders Logo" />
         <span>Skycoders Airline Management System</span>
       </div>
       <ul class="nav-menu">
-        <li><a href="landing.html">Home</a></li>
-        <li><a href="contact.html">Contact Us</a></li>
-        <li><a href="bookFlight.html">Book Flight</a></li>
+        <li><a href="./landing.html">Home</a></li>
+        <li><a href="./about.html">About Us</a></li>
+        <li><a href="./bookFlight.html">Book Flight</a></li>
       </ul>
     </nav>
   </header>
@@ -38,7 +38,7 @@
               <input type="password" id="password" placeholder="Enter your password" required />
             </div>
             <button type="submit" onclick="loginUser()">Login</button>
-            <p class="signup-link">Don't have an account? <a href="reg.html">Sign Up</a></p>
+            <p class="signup-link">Don't have an account? <a href="./reg.html">Sign Up</a></p>
           </form>
         </div>
         <div class="info">
@@ -57,11 +57,27 @@
 
     var Module = {
         onRuntimeInitialized: function() {
-          Module.ccall('init_persistent_fs', null, [], []);
-  
+          // Create persistent mount in JS
+          FS.mkdir('/persistent');
+          FS.mount(IDBFS, {}, '/persistent');
+      
+          //  Wait for sync
+          FS.syncfs(true, function (err) {
+
+
+              if (err) {
+                console.error("Error syncing FS:", err);
+                return;
+              }
+        
+              console.log("Persistent filesystem loaded.");
+        
+              // safely call C functions
+              Module.ccall('loadFlightsFromFile', null, [], []);
+             // Module.ccall('createInitialAdmins', null, [], []);
           // Create wrappers for the C functions so they can be called from JavaScript.
           window.loginC = Module.cwrap('login', 'number', ['string', 'string']);
-  
+            });
         }
       };
 
@@ -71,7 +87,12 @@
         let password = document.getElementById('password').value;
         let res = window.loginC(username, password);
         if (res === 1) {
-          alert('Login successful!');
+          if(username == "admin"){
+            window.location.href = "/Modules/admin.html";
+          }else{
+              alert('Login successful!');
+              //user dashboard to be implemented soon.
+            }
         } else if (res === 0) {
          alert('Invalid credentials');
         } else {
@@ -81,6 +102,6 @@
 
   </script>
 
-  <script src="interface.js"></script>
+  <script src="/Modules/interface.js"></script>
 </body>
 </html>

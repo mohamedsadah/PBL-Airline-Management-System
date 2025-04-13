@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Skycoders</title>
+  <link rel="stylesheet" href="operations.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Admin Panel</h2>
+      </div>
+      <div>
+      <ul class="sidebar-menu">
+        <li><a href="#">Add Flight</a></li>
+        <li><a href="../subModules/viewflights.html">View Flights</a></li>
+        <li><a href="../subModules/update.html">Update Flight</a></li>
+        <li><a href="../subModules/cancel.html">Cancel Flight</a></li>
+        <li><a href="../subModules/viewpassengers.html">View Passengers</a></li>
+        <li><a href="../subModules/viewbookings.html">View Bookings</a></li>
+        <li class="logout"><a href="/Modules/login.html">Logout</a></li>
+      </ul>
+    </div>
+    </aside>
+
+<!--Main-->
+    <div class="main-content">
+
+        <div class="nav">
+            <div class="logo">
+                <img src="/images/logo.png" alt="Skycoders Logo">
+                <span>Skycoders Airline Management System</span>
+            </div>
+        </div>
+        
+        <form class="add-flight">
+            <h1>Add Flight</h1>
+            <h2>Flight Number </h2>
+          <input type="text" placeholder="Flight Number" id="flightNumber" value="GEU-" maxlength="10" required>
+          <h2>Departure </h2>
+          <input type="text" placeholder="Departure" id="departure" required>
+          <h2>Destination </h2>
+          <input type="text" placeholder="Destination" id="destination" required>
+          <h2>Departure Date </h2>
+          <input type="date" placeholder="Departure Date" id="departDate" required>
+          <h2>Arrival Date </h2>
+          <input type="date" placeholder="Arrival Date" id="arrivalDate" required>
+          <h2>Time </h2>
+          <input type="time" placeholder="Time" id="flightTime" required>
+          <h2>No. of stops </h2>
+          <select id="stop-count">
+            <option value="0">No Stops</option>
+            <option value="1">1 Stop</option>
+            <option value="2">2 Stops</option>
+            <option value="3">3 Stops</option>
+            <option value="4">4 Stops</option>
+          </select>
+      
+          <div id="stops-input">
+
+          </div>
+      
+          <button type="submit" >Add Flight</button>
+        </form>
+      </div>
+
+      <script>
+
+
+        document.addEventListener("DOMContentLoaded", function () {
+          const stopCount = document.getElementById("stop-count");
+          const stopContainer = document.getElementById("stops-input");
+            
+          
+      
+          stopCount.addEventListener("change", function () {
+            const stops = parseInt(this.value);
+            stopContainer.innerHTML = ""; // Clear previous inputs
+      
+            for (let i = 1; i <= stops; i++) {
+              // Create label
+              const label = document.createElement("label");
+              label.textContent = `Enter Stop ${i}:`;
+              label.style.display = "block";
+              label.style.marginTop = "10px";
+      
+              // Create input
+              const input = document.createElement("input");
+              input.type = "text";
+              input.placeholder = `Stop ${i}`;
+              input.name = `stop${i}`;
+              input.classList.add("stop-input");
+              input.style.marginBottom = "10px";
+              input.style.width = "100%";
+              input.style.padding = "0.6rem";
+              input.style.borderRadius = "8px";
+              input.style.border = "1px solid #ccc";
+      
+              // Append to container
+              stopContainer.appendChild(label);
+              stopContainer.appendChild(input);
+            }
+          });
+        });
+
+
+        var Module = {
+            onRuntimeInitialized: function() {
+              // Create persistent mount in JS
+              FS.mkdir('/persistent');
+              FS.mount(IDBFS, {}, '/persistent');
+          
+              //  Wait for sync
+              FS.syncfs(true, function (err) {
+
+
+                  if (err) {
+                    console.error("Error syncing FS:", err);
+                    return;
+                  }
+            
+                  console.log("Persistent filesystem loaded.");
+            
+                  // safely call C functions
+                  Module.ccall('loadFlightsFromFile', null, [], []);
+  
+                // Create a wrapper for addFlight (exposed as addFlightC)
+                window.addFlightC = Module.cwrap('addFlight', 'number',
+                  ['string', 'string', 'string', 'string', 'string', 'string', 'number', 'number']
+                );
+            
+  
+            document.querySelector(".add-flight").addEventListener("submit", function (e) {
+              e.preventDefault();
+              sendFlightDataToC();
+            });
+          
+            function sendFlightDataToC() {
+              // Get form values
+              const fNum = document.getElementById("flightNumber").value.trim();
+              const dep  = document.getElementById("departure").value.trim();
+              const dest = document.getElementById("destination").value.trim();
+              const dDate = document.getElementById("departDate").value.trim();
+              const aDate = document.getElementById("arrivalDate").value.trim();
+              const time = document.getElementById("flightTime").value.trim();
+              const stopCount = parseInt(document.getElementById("stop-count").value);
+              const stopInputs = document.querySelectorAll(".stop-input");
+  
+              if (!fNum || !dep || !dest || !dDate || !aDate || !time) {
+                  alert("Please fill in all the required flight information fields.");
+                  return;
+                }
+
+                if(!fNum.toUpperCase().startsWith("GEU-")){
+                    alert("Flight Number must start with 'GEU-' ");
+                    return;
+                }
+  
+                if (stopCount > 0) {
+                  for (let i = 0; i < stopCount; i++) {
+                    if (!stopInputs[i] || !stopInputs[i].value.trim()) {
+                      alert(`Please enter stop ${i + 1} information.`);
+                      return;
+                    }
+                  }
+                }
+          
+              // Convert stop inputs to C-compatible strings
+              const stopPointers = [];
+              if(stopCount > 0){
+              stopInputs.forEach(function(input) {
+                  let str = input.value;
+                  const len = lengthBytesUTF8(str) + 1; // +1 for the null terminator
+                  const ptr = Module._malloc(len);
+                  stringToUTF8(str, ptr, len);
+                  stopPointers.push(ptr);
+              });
+
+                     // Allocate memory to hold the pointers (char**)
+                    const stopListPtr = Module._malloc(stopPointers.length * 4);  // 4 bytes per pointer (on 32-bit WASM)
+
+                    // Write each pointer to the memory block
+                    stopPointers.forEach((ptr, i) => {
+                        Module.setValue(stopListPtr + i * 4, ptr, 'i32');
+                    });
+
+                }
+          
+              // Call the C function (addFlight) via the wrapper
+             let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount);
+              console.log(res);
+             if(res === -1){
+                 showHero("Flight Already Exists");
+              }
+               else if (res === 1) {
+                 showHero("Flight Added Successfully");
+              }
+              else{
+              showHero("Error saving Data");
+  
+              }
+              // Free memory allocated for each stop string
+              stopPointers.forEach(ptr => Module._free(ptr));
+                Module._free(stopListPtr);
+
+          
+              // Check if data was collected and sent.
+              console.log(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount);
+             
+            }
+              });
+
+        }
+    };
+
+          function showHero(Message){
+            const hero = document.createElement("div");
+            hero.textContent = Message;
+            hero.style.position = "fixed";
+            hero.style.bottom = "20px";
+            hero.style.right = "20px";
+            if(Message =="Flight Already Exists" ){
+                hero.style.backgroundColor = "red";
+            }else{
+
+                hero.style.backgroundColor = "#4BB543";
+            }
+            hero.style.color = "#fff";
+            hero.style.padding = "15px 25px";
+            hero.style.borderRadius = "10px";
+            hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            hero.style.fontWeight = "600";
+            hero.style.transition = "opacity 0.5s ease";
+            hero.style.opacity = "1";
+            hero.style.zIndex = "9999";
+            document.body.appendChild(hero);
+        
+            setTimeout(() => {
+              hero.style.opacity = "0";
+              setTimeout(() => {
+                document.body.removeChild(hero);
+              }, 500);
+            }, 10000);
+          }
+
+        
+      </script>
+      
+      <script src="/Modules/interface.js"></script>
+</body>
+</html>

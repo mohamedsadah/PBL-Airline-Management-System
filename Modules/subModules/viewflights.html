@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - Skycoders</title>
+  <link rel="stylesheet" href="operations.css">
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+</head>
+<body>
+  <div class="dashboard">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-header">
+        <h2>Admin Panel</h2>
+      </div>
+      <ul class="sidebar-menu">
+        <li><a href="../subModules/addFlight.html">Add Flight</a></li>
+        <li><a href="#">View Flights</a></li>
+        <li><a href="../subModules/update.html">Update Flight</a></li>
+        <li><a href="../subModules/cancel.html">Cancel Flight</a></li>
+        <li><a href="../subModules/viewpassengers.html">View Passengers</a></li>
+        <li><a href="../subModules/viewbookings.html">View Bookings</a></li>
+        <li class="logout"><a href="/Modules/login.html">Logout</a></li>
+      </ul>
+    </aside>
+
+<!--Main-->
+    <div class="main-content">
+
+        <div class="nav">
+            <div class="logo">
+                <img src="/images/logo.png" alt="Skycoders Logo">
+                <span>Skycoders Airline Management System</span>
+            </div>
+        </div>
+
+        <div class="view-container">
+
+          <div class="view-header">
+
+            <h1>View Flights</h1>
+            <input type="text" placeholder="Search Flights">
+
+          </div>
+
+          <div class="flights-container">
+              <!-- Flight Cards (populated dynamically) -->
+              
+          </div>
+
+        </div>
+
+        </div>
+
+        <script>
+          const container = document.querySelector(".flights-container");
+          const searchInput = document.querySelector(".view-header input");
+          let allFlights = [];
+        
+          // Function to render flights into the container
+          function renderFlights(flightList) {
+            container.innerHTML = ''; // Clear previous content
+        
+            if (flightList.length === 0) {
+              const noResult = document.createElement('div');
+              noResult.textContent = 'Flight unavailable.';
+              noResult.classList.add("no-flight-display");
+              container.appendChild(noResult);
+              return;
+            }
+        
+            flightList.forEach(flight => {
+              const div = document.createElement('div');
+              div.classList.add('flight-card');
+        
+              div.innerHTML = `
+                <div class="flight-image">
+                    <img src="/images/fl.jpg" alt="Flight">
+                </div>
+                <div class="flight-details">
+                    <div class="flight-row">
+                        <span class="flight-number">${flight.flightNumber}</span>
+                        <span>${flight.departure} → ${flight.destination}</span>
+                        <span class="travel-time">${flight.time}</span>
+                        <span class="price">₹${Math.floor(Math.random() * 3000 + 3000)}</span>
+                    </div>
+                    <div class="flight-dates">
+                        <small>No. of Stops: ${flight.stopCount}</small>
+                        <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
+                        <small>${flight.departDate} → ${flight.arrivalDate}</small>
+                    </div>
+                </div>
+              `;
+              container.appendChild(div);
+            });
+          }
+        
+          // Handle live search filtering
+          function handleSearchInput() {
+            const query = searchInput.value.trim().toLowerCase();
+            if (query === '') {
+              renderFlights(allFlights);
+            } else {
+              const filtered = allFlights.filter(flight =>
+                flight.departure.toLowerCase().includes(query) ||
+                flight.destination.toLowerCase().includes(query) ||
+                flight.flightNumber.toLowerCase().includes(query) ||
+                flight.departDate.toLowerCase().includes(query)
+              );
+              renderFlights(filtered);
+            }
+          }
+        
+          // Main module logic
+          var Module = {
+            onRuntimeInitialized: function () {
+              // Set up persistent FS
+              FS.mkdir('/persistent');
+              FS.mount(IDBFS, {}, '/persistent');
+        
+              // Wait for FS to sync
+              FS.syncfs(true, function (err) {
+                if (err) {
+                  console.error("Error syncing FS:", err);
+                  return;
+                }
+        
+                console.log("Persistent filesystem loaded.");
+        
+                // Load flight data into C BST
+                Module.ccall('loadFlightsFromFile', null, [], []);
+        
+                // Get all flights in JSON format
+                const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
+                const jsonData = getAllFlightsJSON();
+        
+                console.log("Raw JSON from C:", jsonData);
+        
+                try {
+                  allFlights = JSON.parse(jsonData); // Save all flights globally
+                  renderFlights(allFlights);         // Initial render
+                  console.log(allFlights.map(f => f.flightNumber));
+
+                } catch (e) {
+                  console.error("JSON Parse Error:", e);
+                }
+              });
+            }
+          };
+        
+          // Attach search input event listener
+          searchInput.addEventListener('input', handleSearchInput);
+        </script>
+        
+        <script src="/Modules/interface.js"></script>
+         
+</body>
+</html>

@@ -5,23 +5,22 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Skycoders Airline Management System</title>
   <!-- Link to the external CSS file -->
-  <link rel="stylesheet" href="reg.css">
+  <link rel="stylesheet" href="./reg.css">
 </head>
 <body>
   <!-- Header with Transparent Navbar -->
   <header>
     <nav class="navbar">
       <div class="logo">
-        <!-- Replace logo.png with your logo file -->
-        <img src="logo.png" alt="Skycoders Logo">
+        
+        <img src="/images/logo.png" alt="Skycoders Logo">
         <span>Skycoders Airline Management System</span>
       </div>
       <ul class="nav-menu">
-        <li><a href="#">Home</a></li>
-        <li><a href="#">About Us</a></li>
-        <li><a href="#">Contact Us</a></li>
+        <li><a href="./landing.html">Home</a></li>
+        <li><a href="./about.html">About Us</a></li>
         <li><a href="#">Book Flight</a></li>
-        <li><a href="login.html">Login</a></li>
+        <li><a href="./login.html">Login</a></li>
       </ul>
     </nav>
   </header>
@@ -62,11 +61,28 @@
 
       var Module = {
         onRuntimeInitialized: function() {
-          Module.ccall('init_persistent_fs', null, [], []);
+           // Create persistent mount in JS
+           FS.mkdir('/persistent');
+           FS.mount(IDBFS, {}, '/persistent');
+       
+           //  Wait for sync
+           FS.syncfs(true, function (err) {
+
+
+               if (err) {
+                 console.error("Error syncing FS:", err);
+                 return;
+               }
+         
+               console.log("Persistent filesystem loaded.");
+         
+               // safely call C functions
+               Module.ccall('loadFlightsFromFile', null, [], []);
   
           // Create wrappers for the C functions so they can be called from JavaScript.
           window.registerUserC = Module.cwrap('register_user', 'number', ['string', 'string']);
-        }
+        });
+      }
       };
   
       // Function to register a user using the C function.
