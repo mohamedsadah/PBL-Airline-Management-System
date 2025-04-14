@@ -171,6 +171,7 @@
           
               // Convert stop inputs to C-compatible strings
               const stopPointers = [];
+              let stopListPtr = 0;
               if(stopCount > 0){
               stopInputs.forEach(function(input) {
                   let str = input.value;
@@ -181,15 +182,15 @@
               });
 
                      // Allocate memory to hold the pointers (char**)
-                    const stopListPtr = Module._malloc(stopPointers.length * 4);  // 4 bytes per pointer (on 32-bit WASM)
+                 stopListPtr = Module._malloc(stopPointers.length * 4);  // 4 bytes per pointer (on 32-bit WASM)
 
                     // Write each pointer to the memory block
                     stopPointers.forEach((ptr, i) => {
                         Module.setValue(stopListPtr + i * 4, ptr, 'i32');
                     });
 
-                }
-          
+            }
+                console.log(stopListPtr)
               // Call the C function (addFlight) via the wrapper
              let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount);
               console.log(res);
@@ -244,7 +245,7 @@
               setTimeout(() => {
                 document.body.removeChild(hero);
               }, 500);
-            }, 10000);
+            }, 15000);
           }
 
         

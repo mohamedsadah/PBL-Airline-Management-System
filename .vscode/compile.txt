@@ -1,5 +1,1 @@
-emcc modules.c -o interface.html \
-  -s EXPORTED_FUNCTIONS=['_init_persistent_fs','_register_user','_login', '_addFlight'] \
-  -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap'] \
-  -s FORCE_FILESYSTEM=1 \
-  -lidbfs.js
+emcc modules.c -o interface.html -s EXPORTED_FUNCTIONS=['_addFlight','_loadFlightsFromFile','_getAllFlightsJSON','_register_user','_login','_createInitialAdmins','_malloc','_free'] -s EXPORTED_RUNTIME_METHODS=['ccall','cwrap','setValue'] -s FORCE_FILESYSTEM=1 -lidbfs.js
