@@ -21,6 +21,7 @@ typedef struct Flight {
     char time[10];
     char stops[4][50]; // up to 4 stops
     int stopCount;
+    int price;
 
     struct Flight *left, *right;
 } Flight;
@@ -38,7 +39,7 @@ Flight *root = NULL;
 char jsonBuffer[100000]; //for storing json format of flight data 
 
 // Create new flight node
-Flight* createFlightNode(const char *fNum, const char *dep, const char *dest, const char *dDate, const char *aDate, const char *time, char stops[4][50], int stopCount) {
+Flight* createFlightNode(const char *fNum, const char *dep, const char *dest, const char *dDate, const char *aDate, const char *time, char stops[4][50], int stopCount, int price) {
     Flight *newNode = (Flight *)malloc(sizeof(Flight));
     strcpy(newNode->flightNumber, fNum);
     strcpy(newNode->departure, dep);
@@ -50,6 +51,7 @@ Flight* createFlightNode(const char *fNum, const char *dep, const char *dest, co
     for (int i = 0; i < stopCount; i++) {
         strcpy(newNode->stops[i], stops[i]);
     }
+    newNode->price = price;
     newNode->left = NULL;
     newNode->right = NULL;
     return newNode;
@@ -102,7 +104,7 @@ int saveFlightToFile(Flight *flight) {
 
 // Exposed to JS
 EMSCRIPTEN_KEEPALIVE
-int addFlight(const char *fNum, const char *dep, const char *dest, const char *dDate, const char *aDate, const char *time, char **stopList, int stopCount) {
+int addFlight(const char *fNum, const char *dep, const char *dest, const char *dDate, const char *aDate, const char *time, char **stopList, int stopCount, int price) {
     char stops[4][50];
     for (int i = 0; i < stopCount && i < 4; i++) {
         strncpy(stops[i], stopList[i], 49);
@@ -112,7 +114,7 @@ int addFlight(const char *fNum, const char *dep, const char *dest, const char *d
 
 
 
-    Flight *newFlight = createFlightNode(fNum, dep, dest, dDate, aDate, time, stops, stopCount);
+    Flight *newFlight = createFlightNode(fNum, dep, dest, dDate, aDate, time, stops, stopCount, price);
     if(insertFlight(&root, newFlight)){
         if(saveFlightToFile(newFlight) == 0){
             return -2;
@@ -137,8 +139,8 @@ void loadFlightsFromFile() {
 
         Flight *node = createFlightNode(
             temp.flightNumber, temp.departure, temp.destination,
-            temp.departDate, temp.arrivalDate, temp.time, temp.stops, temp.stopCount
-        );
+            temp.departDate, temp.arrivalDate, temp.time, temp.stops, temp.stopCount, 
+            temp.price);
 
         
         insertFlight(&root, node);
@@ -146,7 +148,7 @@ void loadFlightsFromFile() {
     }
     fclose(fp);
 
-    printf("✅ BST Successfully Populated. Flights:\n");
+    printf("BST Successfully Populated. Flights:\n");
 
     // Inline in-order traversal
     Flight *stack[100]; // simple manual stack for up to 100 nodes
@@ -190,9 +192,9 @@ void buildJSON(Flight *node, char *buffer) {
     char flightEntry[1024];
     sprintf(flightEntry,
         "{ \"flightNumber\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", "
-        "\"departDate\": \"%s\", \"arrivalDate\": \"%s\", \"time\": \"%s\", \"stopCount\": %d, \"stops\": [",
+        "\"departDate\": \"%s\", \"arrivalDate\": \"%s\", \"time\": \"%s\", \"stopCount\": %d,\"price\": %d, \"stops\": [",
         node->flightNumber, node->departure, node->destination,
-        node->departDate, node->arrivalDate, node->time, node->stopCount);
+        node->departDate, node->arrivalDate, node->time, node->stopCount, node->price);
 
     strcat(buffer, flightEntry);
 
@@ -209,6 +211,40 @@ void buildJSON(Flight *node, char *buffer) {
 
     strcat(buffer, "] },");
     buildJSON(node->right, buffer); // traverse right subtree
+}
+
+void buildSearchJSON(Flight *node, char *buffer, const char *departure, const char *destination, const char *date) {
+    if (node == NULL) return;
+
+    buildSearchJSON(node->left, buffer, departure, destination, date); // traverse left subtree
+
+    if(strcmp(node->departure, departure)==0 && 
+       strcmp(node->destination, destination)==0 && 
+       strcmp(node->departDate, date)==0)
+       {
+    char flightEntry[1024];
+    sprintf(flightEntry,
+        "{ \"flightNumber\": \"%s\", \"departure\": \"%s\", \"destination\": \"%s\", "
+        "\"departDate\": \"%s\", \"arrivalDate\": \"%s\", \"time\": \"%s\", \"stopCount\": %d,\"price\": %d, \"stops\": [",
+        node->flightNumber, node->departure, node->destination,
+        node->departDate, node->arrivalDate, node->time, node->stopCount, node->price);
+
+    strcat(buffer, flightEntry);
+
+    int addedStop = 0;
+    for (int i = 0; i < node->stopCount; ++i) {
+        if (strlen(node->stops[i]) > 0 && node->stops[i][0] >= 32 && node->stops[i][0] <= 126) {
+            if (addedStop > 0) strcat(buffer, ", ");
+            strcat(buffer, "\"");
+            strcat(buffer, node->stops[i]);
+            strcat(buffer, "\"");
+            addedStop++;
+        }
+    }
+
+    strcat(buffer, "] },");
+}
+    buildSearchJSON(node->right, buffer, departure, destination, date); // traverse right subtree
 }
 
 
@@ -229,7 +265,22 @@ const char* getAllFlightsJSON() {
     return jsonBuffer;
 }
 
+EMSCRIPTEN_KEEPALIVE
+const char* getOneWayFlightsJSON(const char *departure, const char *destination, const char *date) {
+    strcpy(&jsonBuffer[0], "[");  // Clear the buffer
+    jsonBuffer[1] = '\0';  // Clear the buffer
 
+    buildSearchJSON(root, jsonBuffer + 1, departure, destination, date);
+
+    // Remove trailing comma
+    int len = strlen(jsonBuffer);
+    if (len > 1 && jsonBuffer[len - 1] == ',') {
+        jsonBuffer[len - 1] = '\0';
+    }
+
+    strcat(jsonBuffer, "]");
+    return jsonBuffer;
+}
 
 
 // Function to register a new user by appending the username and password.
@@ -327,11 +378,11 @@ void createInitialAdmins() {
 
     for (int i = 0; i < count; i++) {
         fwrite(&admins[i], sizeof(Users), 1, fp);
-        printf("✅ Admin written: %s\n", admins[i].username);
+        printf("Admin written: %s\n", admins[i].username);
     }
 
     fclose(fp);
-    printf("📁 Admins successfully created in ADMIN_FILE\n");
+    printf("Admins successfully created in ADMIN_FILE\n");
 }
 
 

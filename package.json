@@ -1,0 +1,27 @@
+{
+  "name": "ams",
+  "version": "1.0.0",
+  "main": "payment/server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node payment/server.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mohamedsadah/PBL-Airline-Management-System.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/mohamedsadah/PBL-Airline-Management-System/issues"
+  },
+  "homepage": "https://github.com/mohamedsadah/PBL-Airline-Management-System#readme",
+  "description": "",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.5.0",
+    "express": "^5.1.0",
+    "razorpay": "^2.9.6"
+  }
+}

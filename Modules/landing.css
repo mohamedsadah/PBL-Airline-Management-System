@@ -1,10 +1,14 @@
-/* Reset & Base */
+
 * {
     margin: 0;
     padding: 0;
     box-sizing: border-box;
   }
   
+  html {
+    scroll-behavior: smooth;
+  }
+
   body {
     font-family: 'Outfit', sans-serif;
     background-color: #f8f9fa;
@@ -183,8 +187,100 @@
   
   .action-btn:hover {
     background-color: #007BFF;
-    transform: translateY(-3px);
+    transform: translateY(-2px);
   }
+
+  /* Flight card */
+
+  .flight-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 10px;
+    background: #ffffff;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.5);
+    transition: transform 0.2s ease;
+  }
+  
+  .flight-card:hover {
+    transform: translateY(-4px);
+  }
+  
+  .flight-image img {
+    width: 90px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 60px;
+  }
+  
+  .flight-details {
+    flex: 1;
+    display: flex;
+    font-weight: bold;
+    flex-direction: column;
+  }
+
+  .flight-number {
+    font-size: 25px;
+  }
+  
+  .flight-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 6px;
+  }
+  
+  .flight-dates {
+    display: flex;
+    justify-content: space-between;
+    font-size: 18px;
+    
+    color: #555;
+  }
+
+  .no-flight-display {
+    display: flex;
+    color: rgba(10, 39, 58, 0.973);
+    justify-content: center;
+    margin: 0 auto;  
+    padding: 20px 30px;
+    max-width: 600px;
+    font-weight: bold;
+    background: #ffffff;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.3);
+    border-radius: 20px;
+  }
+
+  .searched-flights{
+    padding: 20px;
+  }
+
+  .title {
+    margin: 20px;
+  }
+
+  .book{
+    padding: 15px 20px;
+    border-radius: 10px;
+    border: none;
+    background-color: rgba(10, 59, 78, 0.774);
+    color: white;
+    font-weight: bold;
+    font-size: 1em;
+    cursor: pointer;
+  }
+
+  .book:hover {
+    background-color: rgba(50, 245, 82, 0.897);
+    color: rgba(8, 57, 70, 0.884);
+    transition: .3s;
+  }
+  
   
   /* === Info Section === */
   .info-section {

@@ -74,7 +74,7 @@
         
               // safely call C functions
               Module.ccall('loadFlightsFromFile', null, [], []);
-             // Module.ccall('createInitialAdmins', null, [], []);
+              Module.ccall('createInitialAdmins', null, [], []);
           // Create wrappers for the C functions so they can be called from JavaScript.
           window.loginC = Module.cwrap('login', 'number', ['string', 'string']);
             });

@@ -190,6 +190,7 @@ body {
     .team-container {
       flex-direction: column;
       align-items: center;
+      margin: 0 auto;
     }
   
     .team-member {
@@ -232,9 +233,13 @@ body {
     }
   
     .team-member {
-      flex-direction: column-reverse;
+      flex-direction: column;
       padding: 15px;
       gap: 50px;
+    }
+
+    .left {
+      flex-direction: column-reverse;
     }
   
     .member-image img {

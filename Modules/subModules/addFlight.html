@@ -63,6 +63,9 @@
           <div id="stops-input">
 
           </div>
+
+          <h2>Price </h2>
+          <input type="text" placeholder="price" id="price" pattern="\d*" inputmode="numeric" required>
       
           <button type="submit" >Add Flight</button>
         </form>
@@ -130,7 +133,7 @@
   
                 // Create a wrapper for addFlight (exposed as addFlightC)
                 window.addFlightC = Module.cwrap('addFlight', 'number',
-                  ['string', 'string', 'string', 'string', 'string', 'string', 'number', 'number']
+                  ['string', 'string', 'string', 'string', 'string', 'string', 'number', 'number', 'number']
                 );
             
   
@@ -149,6 +152,7 @@
               const time = document.getElementById("flightTime").value.trim();
               const stopCount = parseInt(document.getElementById("stop-count").value);
               const stopInputs = document.querySelectorAll(".stop-input");
+              const price = document.getElementById("price").value.trim();
   
               if (!fNum || !dep || !dest || !dDate || !aDate || !time) {
                   alert("Please fill in all the required flight information fields.");
@@ -159,6 +163,8 @@
                     alert("Flight Number must start with 'GEU-' ");
                     return;
                 }
+
+                
   
                 if (stopCount > 0) {
                   for (let i = 0; i < stopCount; i++) {
@@ -192,7 +198,7 @@
             }
                 console.log(stopListPtr)
               // Call the C function (addFlight) via the wrapper
-             let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount);
+             let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount, price);
               console.log(res);
              if(res === -1){
                  showHero("Flight Already Exists");
@@ -210,7 +216,7 @@
 
           
               // Check if data was collected and sent.
-              console.log(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount);
+              console.log(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount,price);
              
             }
               });
@@ -245,7 +251,7 @@
               setTimeout(() => {
                 document.body.removeChild(hero);
               }, 500);
-            }, 15000);
+            }, 3000);
           }
 
         

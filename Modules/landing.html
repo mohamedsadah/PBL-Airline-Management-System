@@ -29,33 +29,37 @@
       <div class="slide" style="background-image: url('/images/fl.jpg');"></div>
       <div class="slide" style="background-image: url('/images/fl3.jpg');"></div>
       <div class="slide" style="background-image: url('/images/flight.jpg');"></div>
-      <div class="slide" style="background-image: url('/images/fl4.jpg');"></div>
-      <div class="slide" style="background-image: url('/images/fl5.jpg');"></div>
-      <div class="slide" style="background-image: url('/images/fl6.jpg');"></div>
-      <div class="slide" style="background-image: url('/images/fl7.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/f4.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/f5.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/f6.jpg');"></div>
+      <div class="slide" style="background-image: url('/images/f7.jpg');"></div>
       <div class="slide" style="background-image: url('/images/fl8.jpg');"></div>
     </div>
     
     <!-- Booking Form Overlay -->
     <div class="booking-box">
       <h2>Book Your Flight</h2>
-      <form>
+      <form id="form">
         <div class="form-row">
-          <input type="text" placeholder="Departure">
-          <input type="text" placeholder="Destination">
+          <input type="text" placeholder="Departure" id="departure" name="departure">
+          <input type="text" placeholder="Destination" id="destination" name="destination">
         </div>
         <div class="form-row">
-          <input type="date" placeholder="Depart Date">
-          <input type="date" placeholder="Return Date">
+          <input type="date" placeholder="Depart Date" id="departDate" name="departDate"/>
+          <input type="date" placeholder="Return Date" id="returnDate" name="returnDate" disabled/>
         </div>
         <div class="form-row radio-buttons">
-          <label><input type="radio" name="trip" checked> One Way</label>
-          <label><input type="radio" name="trip"> Round Trip</label>
+          <label>
+            <input type="radio" name="trip" value="one" checked> One Way
+          </label>
+          <label>
+            <input type="radio" name="trip" value="round"> Round Trip
+          </label>
         </div>
-        <button type="submit">Check Availability</button>
+        <button type="submit">Search Flight</button>
       </form>
     </div>
-
+    
   </section>
   
   <!-- Quick Access Buttons -->
@@ -64,6 +68,11 @@
     <button class="action-btn">Check Flight Status</button>
     <button class="action-btn">Manage Booking</button>
   </section>
+
+  <!--div for flight search. To be populated upon search-->
+  <div class="searched-flights" id="flights-div">
+
+  </div>
 
   <!-- Info Section -->
   <section class="info-section">
@@ -103,6 +112,8 @@
     </div>
   </footer>
 
+  
   <script src="./landing.js"></script>
+  <script src="/Modules/interface.js"></script>
 </body>
 </html>

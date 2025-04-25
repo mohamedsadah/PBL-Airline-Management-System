@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Checkout - Skycoders</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="bookflight.css">
+
+  <script async
+      src="https://pay.google.com/gp/p/js/pay.js">
+    </script>
+
+<script>
+    window.addEventListener('load', () => {
+      if (window.google && google.payments) {
+        window.onGooglePayLoaded();
+      } else {
+        console.error("Google Pay library not loaded");
+      }
+    });
+  </script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+</head>
+<body>
+    <img id="logo" src="/images/logo.png" style="display:none;" />
+    <img id="bg" src="/images/fl.jpg" style="display:none;" />
+  <div class="main-content">
+    <div class="nav">
+        <div class="logo">
+          <img src="/images/logo.png" alt="Skycoders Logo" />
+          <span>Skycoders Airline Management System</span>
+        </div>
+    </div>
+
+    <div id="flight-summary"></div>
+
+    <!-- Booking Info Form -->
+    <h3>Passenger Information</h3>
+    <form id="booking-form">
+    <input type="text" placeholder="Full Name" id="name" name="fullname" required />
+    <input type="text" placeholder="Passport Number" id="passport" name="passport" required />
+    <input type="text" placeholder="Nationality"  id="nationality" name="nationality" required />
+    <input type="text" placeholder="contact number" id="contact" name="contact" required />
+    <input type="email" placeholder="Email Address" id="email" name="email"/>
+    </form>
+
+    <div id="gpay-button">Pay with GPay</div>
+  </div>
+
+  
+
+
+  <script src="book.js"></script>
+</body>
+</html>
