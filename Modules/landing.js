@@ -63,6 +63,12 @@ document.addEventListener("DOMContentLoaded", () => {
     departDate = document.getElementById("departDate").value;
     returnDate = document.getElementById("returnDate").value;
 
+    const today = new Date().toISOString().split("T");
+
+    document.querySelectorAll('input[type="date"]').forEach((input) => {
+      input.min = today[0];
+    });
+
     const tripType = document.querySelector(
       'input[name="trip"]:checked'
     )?.value;

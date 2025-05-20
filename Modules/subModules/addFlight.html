@@ -143,6 +143,12 @@
               e.preventDefault();
               sendFlightDataToC();
             });
+
+            const today = new Date().toISOString().split('T');
+
+            document.querySelectorAll('input[type="date"]').forEach(input => {
+              input.min = today[0];
+            });
           
             function sendFlightDataToC() {
               // Get form values

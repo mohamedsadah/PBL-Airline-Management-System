@@ -198,6 +198,12 @@ function toggleField() {
     }
 }
 
+const today = new Date().toISOString().split('T');
+
+document.querySelectorAll('input[type="date"]').forEach(input => {
+  input.min = today[0];
+});
+
      document.getElementById('updateFlightForm').addEventListener('submit', function(event) {
           event.preventDefault(); 
           updateFlight(); //
