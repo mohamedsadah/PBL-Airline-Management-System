@@ -4150,6 +4150,37 @@ async function createWasm() {
   }
   }
 
+  function ___syscall_rmdir(path) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      FS.rmdir(path);
+      return 0;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
+  function ___syscall_unlinkat(dirfd, path, flags) {
+  try {
+  
+      path = SYSCALLS.getStr(path);
+      path = SYSCALLS.calculateAt(dirfd, path);
+      if (flags === 0) {
+        FS.unlink(path);
+      } else if (flags === 512) {
+        FS.rmdir(path);
+      } else {
+        abort('Invalid flags passed to unlinkat');
+      }
+      return 0;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
   var __abort_js = () =>
       abort('native code called abort()');
 
@@ -4403,6 +4434,7 @@ async function createWasm() {
     };
 
 
+
   var FS_createPath = FS.createPath;
 
 
@@ -4468,6 +4500,7 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   Module['ccall'] = ccall;
   Module['cwrap'] = cwrap;
   Module['setValue'] = setValue;
+  Module['UTF8ToString'] = UTF8ToString;
   Module['FS_createPreloadedFile'] = FS_createPreloadedFile;
   Module['FS_unlink'] = FS_unlink;
   Module['FS_createPath'] = FS_createPath;
@@ -4702,7 +4735,6 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'PATH_FS',
   'UTF8Decoder',
   'UTF8ArrayToString',
-  'UTF8ToString',
   'stringToUTF8Array',
   'stringToUTF8',
   'lengthBytesUTF8',
@@ -4776,9 +4808,12 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  69688: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 69839: () => { console.log('BST Loaded and Flights Printed to Console'); },  
- 69901: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); }
+  70120: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 70271: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 70422: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 70573: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 70724: () => { FS.syncfs(true, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 70874: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); }
 };
 var wasmImports = {
   /** @export */
@@ -4787,6 +4822,10 @@ var wasmImports = {
   __syscall_ioctl: ___syscall_ioctl,
   /** @export */
   __syscall_openat: ___syscall_openat,
+  /** @export */
+  __syscall_rmdir: ___syscall_rmdir,
+  /** @export */
+  __syscall_unlinkat: ___syscall_unlinkat,
   /** @export */
   _abort_js: __abort_js,
   /** @export */
@@ -4806,7 +4845,7 @@ var wasmExports;
 createWasm();
 var ___wasm_call_ctors = createExportWrapper('__wasm_call_ctors', 0);
 var _malloc = Module['_malloc'] = createExportWrapper('malloc', 1);
-var _addFlight = Module['_addFlight'] = createExportWrapper('addFlight', 9);
+var _addFlight = Module['_addFlight'] = createExportWrapper('addFlight', 10);
 var _free = Module['_free'] = createExportWrapper('free', 1);
 var _loadFlightsFromFile = Module['_loadFlightsFromFile'] = createExportWrapper('loadFlightsFromFile', 0);
 var _getAllFlightsJSON = Module['_getAllFlightsJSON'] = createExportWrapper('getAllFlightsJSON', 0);
@@ -4814,9 +4853,15 @@ var _getOneWayFlightsJSON = Module['_getOneWayFlightsJSON'] = createExportWrappe
 var _register_user = Module['_register_user'] = createExportWrapper('register_user', 2);
 var _login = Module['_login'] = createExportWrapper('login', 2);
 var _createInitialAdmins = Module['_createInitialAdmins'] = createExportWrapper('createInitialAdmins', 0);
+var _updateFlight = Module['_updateFlight'] = createExportWrapper('updateFlight', 6);
+var _deleteFlight = Module['_deleteFlight'] = createExportWrapper('deleteFlight', 1);
+var _addPassenger = Module['_addPassenger'] = createExportWrapper('addPassenger', 5);
+var _loadPassengers = Module['_loadPassengers'] = createExportWrapper('loadPassengers', 0);
+var _getAllPassengersJSON = Module['_getAllPassengersJSON'] = createExportWrapper('getAllPassengersJSON', 0);
 var _main = createExportWrapper('main', 2);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
+var _unlink = Module['_unlink'] = createExportWrapper('unlink', 1);
 var _emscripten_stack_get_end = () => (_emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'])();
 var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();

@@ -82,14 +82,13 @@
                     <div class="flight-row">
                         <span class="flight-number">${flight.flightNumber}</span>
                         <span>${flight.departure} → ${flight.destination}</span>
-                        <span class="travel-time">${flight.time}</span>
+                        <span class="travel-time">${flight.departDate} - ${flight.Dtime}</span>
                         <span class="price">₹${flight.price}</span>
                     </div>
                     <div class="flight-dates">
-                        <small>No. of Stops: ${flight.stopCount}</small>
                         <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
-                        <div></div>
-                        <small>${flight.departDate} → ${flight.arrivalDate}</small>
+                        <small>Arrives: ${flight.arrivalDate} - ${flight.Atime}</small>
+                        <small>Status: ${flight.status}</small>
                     </div>
                 </div>
               `;
@@ -130,7 +129,7 @@
                 console.log("Persistent filesystem loaded.");
         
                 // Load flight data into C BST
-                Module.ccall('loadFlightsFromFile', null, [], []);
+                Module.ccall('loadFlightsFromFile', null, []);
         
                 // Get all flights in JSON format
                 const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
@@ -139,8 +138,8 @@
                 console.log("Raw JSON from C:", jsonData);
         
                 try {
-                  allFlights = JSON.parse(jsonData); // Save all flights globally
-                  renderFlights(allFlights);         // Initial render
+                  allFlights = JSON.parse(jsonData); 
+                  renderFlights(allFlights);        
                   console.log(allFlights.map(f => f.flightNumber));
 
                 } catch (e) {

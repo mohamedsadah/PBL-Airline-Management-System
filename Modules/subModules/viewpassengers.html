@@ -35,11 +35,92 @@
             </div>
         </div>
 
+          <input type="text" class="srch" placeholder="Search Passengers by name,passport number or flight number">
+        
+        <div id="passengerContainer" class="passenger-list">
+
+        </div>
         </div>
 
       <script>
-        
+
+        let passengers =[]; 
+        const searchInput = document.querySelector(".srch");
+
+        function handleSearchInput() {
+            const query = searchInput.value.trim().toLowerCase();
+            if (query === '') {
+              renderPassengers(passengers);
+            } else {
+              const filtered = passengers.filter(p =>
+                p.Name.toLowerCase().includes(query) ||
+                p.flightNumber.toLowerCase().includes(query) ||
+                p.PassportNumber.toLowerCase().includes(query)
+              );
+              renderPassengers(filtered);
+            }
+          }
+
+        var Module = {
+          onRuntimeInitialized: function() {
+            FS.mkdir("/persistent");
+            FS.mount(IDBFS, {}, "/persistent");
+            FS.syncfs(true, function(e) {
+              if(e){
+                console.log(`Error Syncing file system: ${e}`);
+                return;
+              }
+
+              Module.ccall("loadPassengers", null, [], []);
+
+              const ptr = Module.ccall('getAllPassengersJSON', 'number', []);
+              const Pjson = Module.UTF8ToString(ptr);
+              passengers = JSON.parse(Pjson);
+              console.log(passengers);
+              
+              renderPassengers(passengers);
+
+              searchInput.addEventListener('input', handleSearchInput);
+
+            });
+          }
+        }
+
+
+      function renderPassengers(passengers) {
+      const container = document.getElementById('passengerContainer');
+      container.innerHTML = ''; 
+
+      passengers.forEach(p => {
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `<div class="cardBDrop">
+          <h2>${p.Name}</h2>
+          <p><span class="label">Passport:</span> ${p.PassportNumber}</p>
+          <p><span class="label">Nationality:</span> ${p.Nationality}</p>
+          <p><span class="label">Contact:</span> ${p.contact}</p>
+          <div><p><button class="details"> ${p.flightNumber}</button></p></div>
+          </div>
+          <button class="ticket"> Generate Ticket </button>
+
+        `;
+        container.appendChild(card);
+      });
+
+      if (passengers.length === 0) {
+              const noResult = document.createElement('div');
+              noResult.textContent = 'No Passengers available';
+              noResult.classList.add("no-flight-display");
+              container.appendChild(noResult);
+              return;
+            }
+
+
+
+    }
       </script>
+
+      <script src="/Modules/interface.js"></script>
       
 </body>
 </html>

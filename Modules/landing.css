@@ -59,10 +59,11 @@
   .nav-menu li a {
     color: #fff;
     text-decoration: none;
+    font-size: 1rem;
     font-weight: bold;
     padding: 20px 15px;
     border-radius: 8px;
-    transition: background 0.3s;
+    transition: 0.3s ease;
   }
   
   .nav-menu li a:hover {
@@ -92,17 +93,24 @@
     background-size: cover;
     background-position: center;
     opacity: 0;
-    animation: fadeSlideshow 20s infinite;
+    animation: fadeSlideshow 56s linear infinite;
   }
   
   .slide:nth-child(1) { animation-delay: 0s; }
-  .slide:nth-child(2) { animation-delay: 6.5s; }
-  .slide:nth-child(3) { animation-delay: 13s; }
-  
+  .slide:nth-child(2) { animation-delay: 8s; }
+  .slide:nth-child(3) { animation-delay: 16s; }
+  .slide:nth-child(4) { animation-delay: 24s; }
+  .slide:nth-child(5) { animation-delay: 32s; }
+  .slide:nth-child(6) { animation-delay: 40s; }
+  .slide:nth-child(7) { animation-delay: 48s; }
+  .slide:nth-child(8) { animation-delay: 56s; }
+
   @keyframes fadeSlideshow {
-    0%, 100% { opacity: 0; }
-    10%, 30% { opacity: 1; }
-    40%, 90% { opacity: 0; }
+    0% { opacity: 0; }
+    5% { opacity: 1; }
+    20% { opacity: 1; }
+    25% { opacity: 0; }
+    100% { opacity: 0; }
   }
   
   /* === Booking Box Overlay === */
@@ -163,6 +171,137 @@
   button[type="submit"]:hover {
     background-color: #0056b3;
   }
+
+  .confirm-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    opacity: 0;
+    visibility: hidden;
+    backdrop-filter: blur(8px);
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+    display: flex;
+    transition: opacity 0.3s ease, visibility 0.3s ease;
+  }
+  
+  .confirm-container.show {
+    opacity: 1;
+    visibility: visible;
+  }
+  
+
+  #confirm-hero {
+    position: fixed;
+    top: 50px;
+    left: 50px;
+    bottom: 50px;
+    right: 50px;
+    margin: auto;
+    width: 60%;
+    height: 60%;
+    background: url("/images/fl.jpg");
+    background-size: cover;
+    background-repeat: no-repeat;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 9998;
+  }
+  
+  .checkStatus {
+    background: rgba(0, 0, 0, 0.541);
+    border-radius: 10px;
+    overflow:hidden;
+    color: white;
+    text-align: center;
+    width: 100%;
+    height: 100%;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+  }
+
+  .checkStatus input {
+    width: 50%;
+    border-radius: 10px;
+    padding: .9rem 1rem;
+    margin: 20px 0 8px 0;
+    text-align: center;
+    font-size: 1rem;
+    background-color: transparent;
+    color: white;
+    font-weight: bold;
+    border: 2px solid rgb(96, 248, 82);
+    transition: 0.2s ease;
+  }
+
+  .checkStatus p {
+    font-size: 20px;
+   
+  }
+
+  .checkStatus input:focus {
+    outline: none;
+    border-color: white;
+    width: 70%
+
+  }
+  
+  .confirm-buttons {
+    margin-top: 1rem;
+  }
+  
+  .confirm-buttons #check {
+    margin: 0 10px;
+    padding: 15px 20px;
+    font-weight: bold;
+    font-size: 15px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    width: 70%;
+    background-color: #5ffc59ee;
+    transition: .2s ease;
+  }
+
+  .close {
+    display: flex;
+    width: 100%;
+    justify-content: right;
+  }
+
+  #close {
+    padding: 10px 15px;
+    border-radius: 10px;
+    margin-right: -7px;
+    margin-top: -7px;
+    font-weight: bold;
+    font-size: 12px;
+    cursor: pointer;
+    border: 0;
+    color: rgba(255, 32, 32, 0.856);
+    background-color: rgba(255, 255, 255, 0.932);
+    transition: .2s ease;
+
+  }
+
+  #close:hover {
+    color: rgb(255, 255, 255);
+    padding: 12px 12px;
+    font-size: 15px;
+    background-color: rgba(250, 40, 40, 0.932);
+    
+
+  }
+
+  .confirm-buttons #check:hover {
+    background-color: #fdd10e;
+    transform: translateY(-2px);
+  }
+  
   
   /* === Quick Actions === */
   .quick-actions {

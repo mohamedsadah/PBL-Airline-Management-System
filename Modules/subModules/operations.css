@@ -49,7 +49,7 @@
     font-weight: bold;
     display: block;
     border-radius: 8px;
-    transition: background 0.3s ease;
+    transition:  0.3s ease;
   }
   
   .sidebar-menu a:hover {
@@ -120,6 +120,7 @@
     gap: 2rem;
     font-family: 'Outfit', sans-serif;
   }
+
   
   .add-flight input,
   .add-flight select {
@@ -149,7 +150,7 @@
     border: none;
     border-radius: 10px;
     cursor: pointer;
-    transition: background 0.3s ease;
+    transition: 0.3s ease;
   }
   
   .add-flight button:hover {
@@ -182,7 +183,7 @@
 
   /* view interface styles */
 
-  .view-container {
+  .view-container, .content {
     display: flex;
     flex-direction: column;
     max-width: 1200px;
@@ -197,31 +198,32 @@
   }
   
 
-  .view-header {
+  .view-header, .input {
     display: flex;
     flex-wrap: wrap;
     gap: 12px;
-    margin-bottom: 24px;
+    margin: 35px 35px;
   }
   
-  .view-header input {
+  .view-header input, .input input, .srch {
     flex: 1;
     min-width: 250px;
     padding: 14px 20px;
     border: 2px solid rgb(78, 255, 116);
     border-radius: 12px;
     font-size: 16px;
+    margin: 0 20px;
     box-sizing: border-box;
     transition: border-color 0.2s ease;
   }
   
-  .view-header input:focus {
+  .view-header input:focus, .input input:focus, .srch:focus  {
     outline: none;
     border-color: #00c875;
     box-shadow: 0 0 0 3px rgba(78, 255, 116, 0.2);
   }
   
-  .view-header button {
+  .view-header button, .input span {
     padding: 14px 24px;
     background-color: rgb(78, 255, 116);
     border: none;
@@ -232,7 +234,7 @@
     transition: all 0.2s ease-in-out;
   }
   
-  .view-header button:hover {
+  .view-header button:hover, .input span:hover {
     background-color: #104059;
     color: #fff;
     transform: translateY(-2px);
@@ -252,14 +254,14 @@
     align-items: center;
     gap: 16px;
     border-radius: 25px;
-    padding: 20px;
+    padding: 15px;
     background: #ffffff;
     box-shadow: 0 4px 12px rgba(0,0,0,0.5);
     transition: transform 0.2s ease;
   }
   
   .flight-card:hover {
-    transform: translateY(-4px);
+    transform: translateY(-2px);
   }
   
   .flight-image img {
@@ -277,7 +279,7 @@
   }
 
   .flight-number {
-    font-size: 25px;
+    font-size: 20px;
   }
   
   .flight-row {
@@ -286,20 +288,20 @@
     align-items: center;
     font-size: 18px;
     font-weight: 600;
-    margin-bottom: 6px;
+    margin-bottom: 20px;
   }
   
   .flight-dates {
     display: flex;
     justify-content: space-between;
-    font-size: 18px;
+    font-size: 15px;
     
     color: #555;
   }
 
   .no-flight-display {
     display: flex;
-    color: red;
+    color: rgb(5, 31, 49);
     justify-content: center;
     margin: 0 auto;  
     padding: 20px 30px;
@@ -309,7 +311,228 @@
     box-shadow: 0 2px 5px rgba(0,0,0,0.3);
     border-radius: 20px;
   }
+
+  .checkboxes {
+    display: flex;
+    justify-content: space-between;
+    flex-wrap: wrap; 
+    background: #f9f9f9;
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    margin: 20px 0;
+    transition: max-height 0.4s ease; 
+}
+
+/* Checkbox label style */
+.checkboxes label {
+    display: flex;
+    align-items: center;
+    font-size: 16px;
+    color: #333;
+    margin: 10px 0;
+    cursor: pointer;
+    transition: color 0.3s ease; 
+}
+
+.checkboxes input[type="checkbox"] {
+    margin-right: 10px;
+    width: 18px;
+    height: 18px;
+    accent-color: #007bff; 
+    transition:  0.3s ease; 
+}
+
+/* Fields container */
+.input-field {
+    background: #ffffff;
+    border: 1px solid #ddd;
+    border-radius: 10px;
+    padding: 15px;
+    margin: 0;
+    max-height: 0;
+    overflow: hidden;
+    opacity: 0;
+    transform: scale(0.95);
+    transition: max-height 0.5s ease;
+    box-shadow: 0 2px 6px rgba(0,0,0,0.05);
+}
+
+/* input visible */
+.input-field.show {
+    max-height: 300px; 
+    opacity: 1;
+    transform: scale(1);
+    margin: 15px 0;
+}
+
+
+/* Labels inside input field */
+.input-field label {
+    display: block;
+    font-weight: 600;
+    color: #555;
+    margin-bottom: 8px;
+}
+
+/* Inputs */
+.input-field input[type="date"],
+.input-field input[type="time"],
+.input-field input[type="text"] {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    font-size: 15px;
+    outline: none;
+    transition: border-color 0.3s;
+}
+
+.input-field input[type="date"]:focus,
+.input-field input[type="time"]:focus {
+    border-color: #007bff;
+}
+
+.updatebtn, .details, .ticket{
+  width: 100%;
+  margin: 10px auto;
+  padding: 15px 30px;
+  border-radius: 10px;
+  border: none;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  background-color: rgb(78, 255, 116);
+  transition: all 0.2s ease-in-out;
+}
+
+.updatebtn:hover, .details:hover {
+  background-color: #104059;
+  color: #fff;
+  transform: translateY(-2px);
+}
+
+/* for cancel interface */
+
+.cancel{
+    padding: 14px 10px;
+    background-color: rgba(250, 98, 98, 0.911);
+    border: none;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.book:hover {
+  background-color: rgba(241, 22, 22, 0.973);
+  transform:rotateY(-3px);
+  color:rgb(255, 255, 255)
+}
+
+#confirm-hero {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9998;
+}
+
+.confirm-box {
+  background: white;
+  padding: 2rem 3rem;
+  border-radius: 10px;
+  text-align: center;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.2);
+}
+
+.confirm-buttons {
+  margin-top: 1.5rem;
+}
+
+.confirm-buttons button {
+  margin: 0 10px;
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+#confirm-yes {
+  background-color: #e53935;
+  color: white;
+}
+
+#confirm-no {
+  background-color: #ccc;
+}
+
+.hidden {
+  display: none;
+}
+
+/*for view passenger Interface*/
   
+.passenger-list {
+  display: grid;
+  gap: 20px;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  padding: 10px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.card {
+  background: rgb(5, 29, 59);
+  text-align: center;
+  border-radius: 12px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.288);
+  padding: 20px;
+  margin: 10px;
+  width: 300px;
+  transition: transform 0.2s ease;
+}
+
+.card:hover {
+  transform: translateY(-5px);
+}
+
+.card h2 {
+  margin: 0 0 15px;
+  font-size: 1em;
+}
+
+.card p {
+  margin: 5px;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.cardBDrop {
+  padding: 10px;
+  border-radius: 10px;
+  background-color: rgb(255, 255, 255);
+  color: rgb(13, 48, 71);
+}
+
+.details{
+  margin-bottom: 0;
+}
+
+.ticket:hover {
+  background-color: rgb(255, 255, 255);
+  color: rgb(13, 48, 71);
+  transform: translateY(-2px);
+}
 
   
   /* Responsive Design */
@@ -320,13 +543,13 @@
     }
   
     .sidebar {
-      width: 90%;
+      width: 95%;
       height: auto;
       flex-direction: column;
       justify-content: space-around;
-      padding: 10px 5px;
-      position: static;
-      margin: 0;
+      padding: 15px;
+      position: relative;
+      margin: 20px auto;
       border-radius: 10px;
     }
   
@@ -338,6 +561,7 @@
       justify-content: center;
       gap: 10px;
       text-align: center;
+      margin: auto;
       max-width: 90%;
     }
   
@@ -379,6 +603,8 @@
       font-size: 0.95rem;
       padding: 0.65rem 0.9rem;
     }
+
+    
   }
 
   /* for view interface */
@@ -416,6 +642,7 @@
       font-size: 13px;
     }
   }
+
   
   
   @media screen and (max-width: 600px) {
@@ -435,6 +662,8 @@
       padding: 1rem;
       gap: 1rem;
     }
+
+    
   }
 
   @media (max-width: 480px) {

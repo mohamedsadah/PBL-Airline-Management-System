@@ -1,4 +1,8 @@
 // Emscripten Module setup
+let searchOneWay,
+  searchRoundTrip,
+  allFlights = [];
+
 var Module = {
   onRuntimeInitialized: function () {
     FS.mkdir("/persistent");
@@ -12,6 +16,12 @@ var Module = {
       console.log("Persistent filesystem loaded.");
       Module.ccall("loadFlightsFromFile", null, [], []);
 
+      const getAllFlightsJSON = Module.cwrap("getAllFlightsJSON", "string", []);
+      const jsonData = getAllFlightsJSON();
+
+      allFlights = JSON.parse(jsonData);
+      console.log(allFlights.map((f) => f.flightNumber));
+
       // Register C-wrapped functions globally
       searchOneWay = Module.cwrap("getOneWayFlightsJSON", "string", [
         "string",
@@ -22,8 +32,7 @@ var Module = {
   },
 };
 
-let searchOneWay, searchRoundTrip;
-
+let departure, destination, departDate, returnDate;
 // Attach form event listener when DOM is ready
 document.addEventListener("DOMContentLoaded", () => {
   const form = document.getElementById("form");
@@ -49,21 +58,25 @@ document.addEventListener("DOMContentLoaded", () => {
     e.preventDefault(); // Prevent page reload
     resultsDiv.innerHTML = "";
 
-    const departure = document.getElementById("departure").value.trim();
-    const destination = document.getElementById("destination").value.trim();
-    const departDate = document.getElementById("departDate").value;
-    const returnDate = document.getElementById("returnDate").value;
+    departure = document.getElementById("departure").value.trim();
+    destination = document.getElementById("destination").value.trim();
+    departDate = document.getElementById("departDate").value;
+    returnDate = document.getElementById("returnDate").value;
+
     const tripType = document.querySelector(
       'input[name="trip"]:checked'
     )?.value;
 
     if (!departure || !destination || !departDate) {
-      alert("Please fill all required fields.");
+      showHero("Please fill all required fields.", "rgb(250, 215, 61)");
       return;
     }
 
     if (tripType === "round" && !returnDate) {
-      alert("Please select return date for round trip.");
+      showHero(
+        "Please select return date for round trip.",
+        "rgb(250, 215, 61)"
+      );
       return;
     }
 
@@ -90,7 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
         renderFlightResults(
           fro,
-          `Flights from ${destination} to ${departure}`,
+          `Return Flights from ${destination} to ${departure}`,
           destination,
           departure
         );
@@ -102,6 +115,14 @@ document.addEventListener("DOMContentLoaded", () => {
 
     window.location.href = "#flights-div";
   });
+});
+
+document.getElementById("book-flight").addEventListener("click", function (e) {
+  if (!departure || !destination || !departDate) {
+    showHero("Please fill all required fields.", "rgb(250, 215, 61)");
+    window.location.href = "#hero";
+    return;
+  }
 });
 
 // Render flight cards
@@ -123,18 +144,19 @@ function renderFlightResults(jsonStr, title, departure, destination) {
       <div class="flight-row">
           <span class="flight-number">${flight.flightNumber}</span>
           <span>${flight.departure} → ${flight.destination}</span>
-          <span class="travel-time">${flight.time}</span>
+          <span class="travel-time">${flight.departDate} - ${
+        flight.Dtime
+      }</span>
           <span class="price">₹${flight.price}</span>
       </div>
       <div class="flight-dates">
-          <small>No. of Stops: ${flight.stopCount}</small>
           <small>Stops: ${
             flight.stops && flight.stops.length > 0
               ? flight.stops.map((stop) => `<span>${stop}</span>`).join(", ")
               : "None"
           }</small>
-          <div></div>
-          <small>${flight.departDate} → ${flight.arrivalDate}</small>
+          <small>Arrives: ${flight.arrivalDate} → ${flight.Atime}</small>
+          <small>Status: ${flight.status}</small>
       </div>
       </div>
       <div>
@@ -156,30 +178,66 @@ function renderFlightResults(jsonStr, title, departure, destination) {
   resultsDiv.appendChild(section);
 }
 
-// Background slideshow
-const images = [
-  'url("/images/fl.jpg")',
-  'url("/images/fl3.jpg")',
-  'url("/images/flight.jpg")',
-  'url("/images/f4.jpg")',
-  'url("/images/f5.jpg")',
-  'url("/images/f6.jpg")',
-  'url("/images/f7.jpg")',
-  'url("/images/fl8.jpg")',
-];
-let currentIndex = 0;
-const landingSection = document.querySelector(".hero-section");
-function changeBackground() {
-  currentIndex = (currentIndex + 1) % images.length;
-  landingSection.style.backgroundImage = images[currentIndex];
-}
-setInterval(changeBackground, 3000);
+//flight status
 
-// Scroll-in animation
-window.addEventListener("scroll", () => {
-  const info = document.querySelector(".info-section");
-  const rect = info.getBoundingClientRect();
-  if (rect.top < window.innerHeight - 100) {
-    info.classList.add("visible");
-  }
-});
+const statusDiv = document.querySelector(".checkStatus");
+
+document
+  .getElementById("flight-status")
+  .addEventListener("click", function (e) {
+    document.querySelector(".confirm-container").classList.add("show");
+
+    document.getElementById("check").addEventListener("click", function (e) {
+      e.preventDefault();
+      const flnum = document.getElementById("flNum").value.trim();
+
+      if (!flnum) {
+        showHero("Please enter a Flight Number.", "rgb(250, 215, 61)");
+        return;
+      }
+
+      let found = false;
+
+      for (let flight of allFlights) {
+        if (flight.flightNumber === flnum) {
+          found = true;
+          showHero(
+            `Flight ${flight.flightNumber} from ${flight.departDate} to ${flight.arrivalDate} is ${flight.status}`,
+            "rgb(84, 250, 51)"
+          );
+        }
+      }
+      if (!found) {
+        showHero("Flight does not exist.", "rgb(250, 215, 61)");
+      }
+    });
+
+    document.getElementById("close").addEventListener("click", function (e) {
+      document.querySelector(".confirm-container").classList.remove("show");
+    });
+  });
+
+function showHero(Message, color) {
+  const hero = document.createElement("div");
+  hero.textContent = Message;
+  hero.style.position = "fixed";
+  hero.style.top = "20px";
+  hero.style.left = "80px";
+  hero.style.backgroundColor = color;
+  hero.style.color = "rgb(15, 45, 59)";
+  hero.style.padding = "25px 35px";
+  hero.style.borderRadius = "10px";
+  hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+  hero.style.fontWeight = "600";
+  hero.style.transition = "opacity 0.5s ease";
+  hero.style.opacity = "1";
+  hero.style.zIndex = "9999";
+  document.body.appendChild(hero);
+
+  setTimeout(() => {
+    hero.style.opacity = "0";
+    setTimeout(() => {
+      document.body.removeChild(hero);
+    }, 500);
+  }, 3000);
+}

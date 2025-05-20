@@ -28,18 +28,293 @@
 <!--Main-->
     <div class="main-content">
 
-        <div class="nav">
-            <div class="logo">
-                <img src="/images/logo.png" alt="Skycoders Logo">
-                <span>Skycoders Airline Management System</span>
+      <div class="nav">
+        <div class="logo">
+            <img src="/images/logo.png" alt="Skycoders Logo">
+            <span>Skycoders Airline Management System</span>
+        </div>
+    </div>
+    <div class="content">
+        <h1>Update Flight</h1>
+        <form id="updateFlightForm">
+            <div class="input">
+              <input type="text" id="flightNumber" name="flightNumber" placeholder="Enter Flight Number" required>
+            <span id="search">Search</span>
             </div>
-        </div>
-
-        </div>
-
+             
+              <div class="details1"></div>
+            <button class="updatebtn" type="submit">Update Flight</button>
+        </form>
+    </div>
       <script>
+        let allflights = [];
+
+        var Module = {
+          onRuntimeInitialized: function(){
+            FS.mkdir('/persistent');
+              FS.mount(IDBFS, {}, '/persistent');
+          
+              //  Wait for sync
+              FS.syncfs(true, function (err) {
+
+
+                  if (err) {
+                    console.error("Error syncing FS:", err);
+                    return;
+                  }
+            
+                  console.log("Persistent filesystem loaded.");
+            
+                  // safely call C functions
+                  Module.ccall('loadFlightsFromFile', null, [], []);
+                  const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
+                
+                window.updateFlightC = Module.cwrap('updateFlight', 'number', 
+                  ['string', 'string', 'string', 'string', 'string', 'string']);
+              
+            
+      const jsonData = getAllFlightsJSON();
+      allflights = JSON.parse(jsonData);
+      console.log(allflights.map(f => f.flightNumber));//check if flights are recieved
+
+    });
+  }
+}
+
+
+const detailsDiv = document.querySelector('.details1');
+
+document.getElementById('search').addEventListener('click', function() {
+    const flightNum = document.getElementById('flightNumber').value.trim();
+    detailsDiv.innerHTML = ''; 
+    
+    if (flightNum) {
+        let found = false; 
+
+        for (let flight of allflights) { 
+            if (flight.flightNumber === flightNum) {
+                found = true;
+
+
+                const div = document.createElement('div');
+                div.classList.add('flight-card');
+                div.innerHTML = `
+                    <div class="flight-image">
+                        <img src="/images/fl.jpg" alt="Flight">
+                    </div>
+                    <div class="flight-details">
+                        <div class="flight-row">
+                            <span class="flight-number">${flight.flightNumber}</span>
+                            <span>${flight.departure} → ${flight.destination}</span>
+                            <span class="travel-time">${flight.departDate} - ${flight.Dtime}</span>
+                            <span class="price">₹${flight.price}</span>
+                        </div>
+                        <div class="flight-dates">
+                            <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
+                            <small>Arrives: ${flight.arrivalDate} → ${flight.Atime}</small>
+                            <small>Status: ${flight.status}</small>
+                        </div>
+                    </div>
+                `;
+                detailsDiv.appendChild(div);
+
+                // add checkboxes
+                detailsDiv.innerHTML += `
+                    <div class="checkboxes">
+                        <label><input type="checkbox" id="updateDepartureDate"> Update Departure Date</label><br>
+                        <label><input type="checkbox" id="updateReturnDate"> Update Return Date</label><br>
+                        <label><input type="checkbox" id="updateFlightTime"> Update Departure Time</label><br>
+                        <label><input type="checkbox" id="updateArrivalTime"> Update Arrival Time</label><br>
+                        <label><input type="checkbox" id="updateStatus"> Update Flight Status</label><br>
+                        </div>
+                    <div id="inputsArea"></div>
+                `;
+
+                // we now attach event listeners
+                document.getElementById('updateDepartureDate').addEventListener('change', toggleField);
+                document.getElementById('updateReturnDate').addEventListener('change', toggleField);
+                document.getElementById('updateFlightTime').addEventListener('change', toggleField);
+                document.getElementById('updateArrivalTime').addEventListener('change', toggleField);
+                document.getElementById('updateStatus').addEventListener('change', toggleField);
+                break; // once found
+            }
+        }
+
+        if (!found) {
+            showHero("Flight does not exist.");
+        }
+    } else {
+        showHero("Please enter a Flight Number.");
+    }
+});
+
+
+function toggleField() {
+    const inputsArea = document.getElementById('inputsArea');
+    inputsArea.innerHTML = ''; 
+
+    if (document.getElementById('updateDepartureDate').checked) {
+        inputsArea.innerHTML += `
+            <div class="input-field show">
+              <label for="departureDate">Departure Date:</label>
+             <input type="date" id="departureDate" name="departureDate" required><br>
+            </div>
+        `;
+    }
+    if (document.getElementById('updateReturnDate').checked) {
+        inputsArea.innerHTML += `
+        <div class="input-field show">
+            <label for="returnDate">Return Date:</label>
+            <input type="date" id="returnDate" name="returnDate" required><br>
+        </div>
+        `;
+    }
+    if (document.getElementById('updateFlightTime').checked) {
+        inputsArea.innerHTML += `
+        <div class="input-field show">
+            <label for="flightTime">Flight Time:</label>
+            <input type="time" id="flightTime" name="flightTime" required><br>
+          </div>
+        `;
+        
+    }
+    if (document.getElementById('updateArrivalTime').checked) {
+        inputsArea.innerHTML += `
+        <div class="input-field show">
+            <label for="flightAtime">Flight Status:</label>
+            <input type="time" id="ArrivalTime" name="flightAtime" required><br>
+          </div>
+        `;
+        
+    }
+    if (document.getElementById('updateStatus').checked) {
+        inputsArea.innerHTML += `
+        <div class="input-field show">
+            <label for="flightStatus">Flight Status:</label>
+            <input type="text" id="flightStatus" name="flightStatus" placeholder="Active or Delayed" required><br>
+          </div>
+        `;
+        
+    }
+}
+
+     document.getElementById('updateFlightForm').addEventListener('submit', function(event) {
+          event.preventDefault(); 
+          updateFlight(); //
+      });
+
+          function updateFlight() {
+            const flightNum = document.getElementById('flightNumber').value.trim();
+            
+            const updateDeparture = document.getElementById('updateDepartureDate').checked;
+            const updateReturn = document.getElementById('updateReturnDate').checked;
+            const updateTime = document.getElementById('updateFlightTime').checked;
+            const updateAtime = document.getElementById('updateArrivalTime').checked;
+            const updateStatus = document.getElementById('updateStatus').checked;
+            
+            let departureInput = null;
+            let returnInput = null;
+            let timeInput = null;
+            let atimeInput = null;
+            let status = null;
+
+            if (document.getElementById('updateDepartureDate').checked) {
+                departureInput = document.getElementById('departureDate').value;
+            }
+            if (document.getElementById('updateReturnDate').checked) {
+                returnInput = document.getElementById('returnDate').value;
+            }
+            if (document.getElementById('updateFlightTime').checked) {
+                timeInput = document.getElementById('flightTime').value;
+            }
+            if (document.getElementById('updateStatus').checked) {
+                status = document.getElementById('flightStatus').value;
+            }
+            if (document.getElementById('updateArrivalTime').checked) {
+                atimeInput = document.getElementById('ArrivalTime').value;
+            }
+
+            console.log(flightNum, departureInput, returnInput, timeInput, atimeInput, status);//debug values
+
+            if (!flightNum) {
+                showHero('Flight number is required.');
+                return;
+            }
+
+            if (!updateDeparture && !updateReturn && !updateTime && !updateStatus & !updateAtime) {
+                showHero('Please select at least one field to update.');
+                return;
+            }
+
+          
+            if ((updateDeparture && !departureInput) || (updateReturn && !returnInput) || 
+                (updateTime && !timeInput) || (updateStatus && !status) || (updateAtime && !atimeInput)) {
+                showHero('Please fill in the selected fields.');
+                return;
+            }
+
+            
+
+            
+            const result = window.updateFlightC(
+                departureInput, 
+                returnInput,    
+                timeInput,
+                atimeInput, 
+                status,     
+                flightNum
+            );
+
+            console.log("Result from C function:", result);
+
+            if (result === 1) {
+                showHero('Flight updated successfully!');
+                setTimeout(()=> {
+                  detailsDiv.innerHTML = '';
+
+                }, 3000);
+            } else {
+                showHero('Error updating flight.');
+            }
+        }
+
+
+          function showHero(Message){
+            const hero = document.createElement("div");
+            hero.textContent = Message;
+            hero.style.position = "fixed";
+            hero.style.top = "20px";
+            hero.style.left = "80px";
+            if(Message !="Flight updated successfully!" ){
+                hero.style.backgroundColor = "red";
+            }else{
+
+                hero.style.backgroundColor = "#4BB543";
+            }
+            hero.style.color = "#fff";
+            hero.style.padding = "25px 35px";
+            hero.style.borderRadius = "10px";
+            hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            hero.style.fontWeight = "600";
+            hero.style.transition = "opacity 0.5s ease";
+            hero.style.opacity = "1";
+            hero.style.zIndex = "9999";
+            document.body.appendChild(hero);
+        
+            setTimeout(() => {
+              hero.style.opacity = "0";
+              setTimeout(() => {
+                document.body.removeChild(hero);
+              }, 500);
+            }, 3000);
+          }
+
+
+
+      
         
       </script>
+      <script src="/Modules/interface.js"></script>
       
 </body>
 </html>

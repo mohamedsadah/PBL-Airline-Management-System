@@ -57,7 +57,16 @@
     font-size: .9em;
   }
 
+  .flight-image img {
+    width: 90px;
+    height: 85px;
+    object-fit: cover;
+    border-radius: 60px;
+  }
+
   #flight-summary {
+    display: flex;
+    justify-content: space-between;
     background: #0ffc43ce;
     padding: 20px;
     border-radius: 10px;
@@ -82,6 +91,7 @@
   .flight-details {
     flex: 1;
     display: flex;
+    margin: 15px;
     font-weight: bold;
     flex-direction: column;
   }
@@ -137,7 +147,7 @@
     background-color: #218838;
   }
 
-  #gpay-button {
+  #gpay-button, #cancel-button {
     height: 50px;
     background-color: #000;
     color: white;
@@ -147,7 +157,21 @@
     justify-content: center;
     font-weight: bold;
     font-size: 0.9rem;
+    margin: 10px auto;
     cursor: pointer;
+    transition: .3s ease-in-out;
+  }
+
+  #cancel-button {
+    background-color: #fd4040f3;
+  }
+
+  #cancel-button:hover {
+    background-color: #d10202;
+  }
+
+  #gpay-button:hover {
+    background-color: #19f819;
   }
 
   input:focus {
@@ -163,4 +187,14 @@
     #payment-form button {
       font-size: 0.95rem;
     }
+
+    #flight-summary {
+      flex-direction: column;
+    }
+
+    .flight-row, .flight-dates {
+      flex-direction: column;
+      align-items:flex-start;
+    }
+
   }

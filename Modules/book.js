@@ -1,19 +1,56 @@
+let save;
+let passengers = [];
+
+var Module = {
+  onRuntimeInitialized: function () {
+    FS.mkdir("/persistent");
+    FS.mount(IDBFS, {}, "/persistent");
+    FS.syncfs(true, function (err) {
+      if (err) {
+        console.error("Error syncing FS:", err);
+        return;
+      }
+
+      console.log("Persistent filesystem loaded.");
+
+      Module.ccall("loadPassengers", null, [], []);
+
+      const ptr = Module.ccall("getAllPassengersJSON", "number", []);
+      const Pjson = Module.UTF8ToString(ptr);
+      passengers = JSON.parse(Pjson);
+      console.log(passengers);
+
+      save = Module.cwrap("addPassenger", "number", [
+        "string",
+        "string",
+        "string",
+        "string",
+        "string",
+      ]);
+    });
+  },
+};
+
 const flight = JSON.parse(localStorage.getItem("selectedFlight"));
 
 if (flight) {
   document.getElementById(
     "flight-summary"
-  ).innerHTML = `<div class="flight-details">
+  ).innerHTML = `<div class="flight-image">
+                    <img src="/images/fl.jpg" alt="Flight">
+                </div>
+                <div class="flight-details">
                     <div class="flight-row">
                         <span class="flight-number">${
                           flight.flightNumber
                         }</span>
                         <span>${flight.departure} → ${flight.destination}</span>
-                        <span class="travel-time">${flight.time}</span>
+                        <span class="travel-time">${flight.departDate} -> ${
+    flight.Dtime
+  }</span>
                         <span class="price">₹${flight.price}</span>
                     </div>
                     <div class="flight-dates">
-                        <small>No. of Stops: ${flight.stopCount}</small>
                         <small>Stops: ${
                           flight.stops && flight.stops.length > 0
                             ? flight.stops
@@ -21,11 +58,13 @@ if (flight) {
                                 .join(", ")
                             : "None"
                         }</small>
-                        <div></div>
-                        <small>${flight.departDate} → ${
-    flight.arrivalDate
+                        <small>Arrives: ${flight.arrivalDate} - ${
+    flight.Atime
   }</small>
+                        <small>Status: ${flight.status}</small>
                     </div>
+                </div>
+                <div>
                 </div>`;
 }
 
@@ -106,9 +145,32 @@ function onGooglePayLoaded() {
         return;
       }
 
-      pay();
+      let found = 0;
+
+      const booked = passengers.forEach((p) => {
+        if (
+          p.PassportNumber == passportNumber &&
+          p.flightNumber == flight.flightNumber
+        ) {
+          found = 1;
+        }
+      });
+
+      console.log(found);
+
+      if (found) {
+        showHero("You have already booked this flight");
+      } else {
+        pay();
+      }
     });
 }
+
+document
+  .getElementById("cancel-button")
+  .addEventListener("click", function (e) {
+    window.location.href = "/Modules/landing.html";
+  });
 
 function showHero(Message) {
   const hero = document.createElement("div");
@@ -116,7 +178,7 @@ function showHero(Message) {
   hero.style.position = "fixed";
   hero.style.top = "20px";
   hero.style.right = "50px";
-  if (Message == "Payment Failed") {
+  if (Message != "Payment Successful!") {
     hero.style.backgroundColor = "red";
   } else {
     hero.style.backgroundColor = "#4BB543";
@@ -138,6 +200,8 @@ function showHero(Message) {
     }, 500);
   }, 5000);
 }
+
+//create itenerary
 
 async function generateItinerary(user, flight) {
   const { jsPDF } = window.jspdf;
@@ -280,16 +344,24 @@ async function generateItinerary(user, flight) {
     doc.setFont("helvetica", "normal");
     doc.text("None", leftX + 30, y);
   }
-
-  y += 10;
+  y -= 12;
   doc.setFont("helvetica", "bold");
-  doc.text("Time:", leftX, y);
-  doc.text("Fare (INR):", midX, y);
+  doc.text("Departure Time:", midX, y);
+  doc.text("Arrival Time:", rightX, y);
 
   y += 7;
   doc.setFont("helvetica", "normal");
-  doc.text(flight.time || "-", leftX, y);
-  doc.text(`₹${flight.price}`, midX, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(flight.Dtime || "-", midX, y);
+  doc.text(flight.Atime || "-", rightX, y);
+
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Fare (INR):", leftX, y);
+
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(`₹${flight.price}`, leftX, y);
 
   // QR Code
   y += 15;
@@ -344,6 +416,16 @@ function handlePaymentSuccess() {
     contact: contact,
   };
 
-  const flight = JSON.parse(localStorage.getItem("selectedFlight"));
   generateItinerary(user, flight);
+
+  const result = save(
+    uName,
+    passNumber,
+    flight.flightNumber,
+    nationality,
+    contact
+  );
+
+  //debug
+  console.log(result);
 }

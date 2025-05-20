@@ -24,7 +24,7 @@
   </header>
 
     <!-- Background with slideshow -->
-  <section class="hero-section">
+  <section class="hero-section" id="hero">
     <div class="slideshow">
       <div class="slide" style="background-image: url('/images/fl.jpg');"></div>
       <div class="slide" style="background-image: url('/images/fl3.jpg');"></div>
@@ -37,7 +37,7 @@
     </div>
     
     <!-- Booking Form Overlay -->
-    <div class="booking-box">
+    <div class="booking-box" id="bbox">
       <h2>Book Your Flight</h2>
       <form id="form">
         <div class="form-row">
@@ -64,9 +64,9 @@
   
   <!-- Quick Access Buttons -->
   <section class="quick-actions">
-    <button class="action-btn">Book Flight</button>
-    <button class="action-btn">Check Flight Status</button>
-    <button class="action-btn">Manage Booking</button>
+    <button class="action-btn" id="book-flight">Book Flight</button>
+    <button class="action-btn" id="flight-status">Check Flight Status</button>
+    <button class="action-btn" id="manage-bookings">Manage Booking</button>
   </section>
 
   <!--div for flight search. To be populated upon search-->
@@ -112,8 +112,32 @@
     </div>
   </footer>
 
-  
+  <!-- flight status check modal -->
+   <div class="confirm-container">
+     <div id="confirm-hero">
+       <div class="checkStatus">
+         <div class="close">
+           <button id="close">Close</button>
+         </div>
+         <form>
+           <p>Enter Flight Number:</p>
+           <input type="text" id="flNum">
+           <div class="confirm-buttons">
+             <button id="check">Check Status</button>
+            </div>
+         </form>
+       </div>
+     </div>
+
+   </div>
+  </div>
+
+
   <script src="./landing.js"></script>
+
+  <script>
+    
+  </script>
   <script src="/Modules/interface.js"></script>
 </body>
 </html>

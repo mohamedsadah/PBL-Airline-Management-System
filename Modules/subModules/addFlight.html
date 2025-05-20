@@ -49,8 +49,10 @@
           <input type="date" placeholder="Departure Date" id="departDate" required>
           <h2>Arrival Date </h2>
           <input type="date" placeholder="Arrival Date" id="arrivalDate" required>
-          <h2>Time </h2>
+          <h2>Departure Time </h2>
           <input type="time" placeholder="Time" id="flightTime" required>
+          <h2>Arrival Time </h2>
+          <input type="time" placeholder="Time" id="arrivalTime" required>
           <h2>No. of stops </h2>
           <select id="stop-count">
             <option value="0">No Stops</option>
@@ -133,7 +135,7 @@
   
                 // Create a wrapper for addFlight (exposed as addFlightC)
                 window.addFlightC = Module.cwrap('addFlight', 'number',
-                  ['string', 'string', 'string', 'string', 'string', 'string', 'number', 'number', 'number']
+                  ['string', 'string', 'string', 'string', 'string', 'string', 'string','number', 'number', 'number']
                 );
             
   
@@ -150,17 +152,18 @@
               const dDate = document.getElementById("departDate").value.trim();
               const aDate = document.getElementById("arrivalDate").value.trim();
               const time = document.getElementById("flightTime").value.trim();
+              const atime = document.getElementById("arrivalTime").value.trim();
               const stopCount = parseInt(document.getElementById("stop-count").value);
               const stopInputs = document.querySelectorAll(".stop-input");
               const price = document.getElementById("price").value.trim();
   
-              if (!fNum || !dep || !dest || !dDate || !aDate || !time) {
-                  alert("Please fill in all the required flight information fields.");
+              if (!fNum || !dep || !dest || !dDate || !aDate || !time || !atime) {
+                  showHero("Please fill in all the required flight information fields.");
                   return;
                 }
 
                 if(!fNum.toUpperCase().startsWith("GEU-")){
-                    alert("Flight Number must start with 'GEU-' ");
+                    showHero("Flight Number must start with 'GEU-' ");
                     return;
                 }
 
@@ -169,7 +172,7 @@
                 if (stopCount > 0) {
                   for (let i = 0; i < stopCount; i++) {
                     if (!stopInputs[i] || !stopInputs[i].value.trim()) {
-                      alert(`Please enter stop ${i + 1} information.`);
+                      showHero(`Please enter stop ${i + 1} information.`);
                       return;
                     }
                   }
@@ -198,7 +201,7 @@
             }
                 console.log(stopListPtr)
               // Call the C function (addFlight) via the wrapper
-             let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount, price);
+             let res = window.addFlightC(fNum, dep, dest, dDate, aDate, time, atime, stopListPtr, stopCount, price);
               console.log(res);
              if(res === -1){
                  showHero("Flight Already Exists");
@@ -216,7 +219,7 @@
 
           
               // Check if data was collected and sent.
-              console.log(fNum, dep, dest, dDate, aDate, time, stopListPtr, stopCount,price);
+              console.log(fNum, dep, dest, dDate, aDate, time, atime, stopListPtr, stopCount,price);
              
             }
               });
@@ -228,9 +231,9 @@
             const hero = document.createElement("div");
             hero.textContent = Message;
             hero.style.position = "fixed";
-            hero.style.bottom = "20px";
-            hero.style.right = "20px";
-            if(Message =="Flight Already Exists" ){
+            hero.style.top = "50px";
+            hero.style.left = "20px";
+            if(Message !="Flight Added Successfully" ){
                 hero.style.backgroundColor = "red";
             }else{
 

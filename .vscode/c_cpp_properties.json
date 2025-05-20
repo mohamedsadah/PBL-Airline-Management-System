@@ -2,11 +2,11 @@
   "configurations": [
     {
       "name": "Emscripten",
-      "compilerPath": "C:/Users/ibnaa/emsdk/upstream/emscripten/emcc.bat",
+      "compilerPath": "/home/mohamed-sadah-bah/emsdk/upstream/emscripten/emcc.bat",
       "includePath": [
         "${workspaceFolder}/**",
-        "C:/Users/ibnaa/emsdk/upstream/emscripten/system/include",
-        "C:/Users/ibnaa/emsdk/upstream/emscripten/cache/sysroot/include"
+        "/home/mohamed-sadah-bah/emsdk/upstream/emscripten/system/include",
+        "/home/mohamed-sadah-bah/emsdk/upstream/emscripten/cache/sysroot/include"
       ],
       "defines": [
         "__EMSCRIPTEN__"

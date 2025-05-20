@@ -35,11 +35,218 @@
             </div>
         </div>
 
+        <div class="view-container">
+
+          <div class="view-header">
+
+            <h1>Cancel Flights</h1>
+            <input type="text" placeholder="Search Flights">
+
+          </div>
+
+          <div class="flights-container">
+              <!-- Flight Cards (populated dynamically) -->
+              
+          </div>
+
         </div>
 
-      <script>
+        <!-- confirmation modal -->
+        <div id="confirm-hero" style="display: none;">
+          <div class="confirm-box">
+            <p>Are you sure you want to delete this flight?</p>
+            <div class="confirm-buttons">
+              <button id="confirm-yes">Yes</button>
+              <button id="confirm-no">No</button>
+            </div>
+          </div>
+        </div>
+        </div>
+
+
+        <script>
+
+          const container = document.querySelector(".flights-container");
+          const searchInput = document.querySelector(".view-header input");
+          let allFlights = [];
+
+           // Main module logic
+           var Module = {
+            onRuntimeInitialized: function () {
+              // Set up persistent FS
+              FS.mkdir('/persistent');
+              FS.mount(IDBFS, {}, '/persistent');
         
-      </script>
+              // Wait for FS to sync
+              FS.syncfs(true, function (err) {
+                if (err) {
+                  console.error("Error syncing FS:", err);
+                  return;
+                }
+        
+                console.log("Persistent filesystem loaded.");
+        
+                // Load flight data into C BST
+                window.load = Module.cwrap('loadFlightsFromFile', null, [], []);
+                
+                window.load();
+                // Get all flights in JSON format
+                const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', []);
+                const jsonData = getAllFlightsJSON();
+
+                window.cancelFlightsC = Module.cwrap('deleteFlight', 'number', ['string'], []);
+        
+                console.log("Raw JSON from C:", jsonData);
+        
+                try {
+                  allFlights = JSON.parse(jsonData); 
+                  renderFlights(allFlights);        
+                  console.log(allFlights.map(f => f.flightNumber));
+
+                } catch (e) {
+                  console.error("JSON Parse Error:", e);
+                }
+              });
+            }
+          };
+        
+          let selectedFlight = null;
+        
+          // Function to render flights into the container
+          function renderFlights(flightList) {
+            container.innerHTML = ''; // Clear previous content
+        
+            if (flightList.length === 0) {
+              const noResult = document.createElement('div');
+              noResult.textContent = 'Flight unavailable.';
+              noResult.classList.add("no-flight-display");
+              container.appendChild(noResult);
+              return;
+            }
+        
+            flightList.forEach(flight => {
+              const div = document.createElement('div');
+              div.classList.add('flight-card');
+        
+              div.innerHTML = `
+                <div class="flight-image">
+                    <img src="/images/fl.jpg" alt="Flight">
+                </div>
+                <div class="flight-details">
+                    <div class="flight-row">
+                        <span class="flight-number">${flight.flightNumber}</span>
+                        <span>${flight.departure} → ${flight.destination}</span>
+                        <span class="travel-time">${flight.departDate} - ${flight.Dtime}</span>
+                        <span class="price">₹${flight.price}</span>
+                    </div>
+                    <div class="flight-dates">
+                        <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
+                        <small>Arrives: ${flight.arrivalDate} - ${flight.Atime}</small>
+                        <small>Status: ${flight.status}</small>
+                    </div>
+                </div>
+                <div>
+                <button class="cancel">Cancel</button>
+                </div>
+              `;
+              container.appendChild(div);
+  
+
+              div.querySelector(".cancel").addEventListener("click", () => {
+                showDeleteConfirmation(flight.flightNumber);
+            });
+            });
+            
+          }
+
+        
+          // Handle live search filtering
+          function handleSearchInput() {                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           
+            const query = searchInput.value.trim().toLowerCase();
+            if (query === '') {
+              renderFlights(allFlights);
+            } else {
+              const filtered = allFlights.filter(flight =>
+                flight.departure.toLowerCase().includes(query) ||
+                flight.destination.toLowerCase().includes(query) ||
+                flight.flightNumber.toLowerCase().includes(query) ||
+                flight.departDate.toLowerCase().includes(query)
+              );
+              renderFlights(filtered);
+            }
+          }
+        
+          // Attach search input event listener
+          searchInput.addEventListener('input', handleSearchInput);
+
+
+          
+          
+          function showDeleteConfirmation(flightId) {
+            console.log(flightId);
+            selectedFlight = flightId;
+            document.getElementById("confirm-hero").style.display = "flex";
+          }
+          
+          document.getElementById("confirm-yes").addEventListener("click", () => {
+            if (selectedFlight) {
+              console.log(selectedFlight);
+              let result = window.cancelFlightsC(selectedFlight);
+              if(result == 1){
+                showHero("Flight Deleted successfully");
+                setTimeout(() =>{
+                  window.location.reload();
+
+                }, 5000);
+              } else {
+                showHero("Error deleting flight");
+              }
+              
+              document.getElementById("confirm-hero").style.display = "none";
+              
+            }
+          });
+
+          document.getElementById("confirm-no").addEventListener("click", () => {
+            document.getElementById("confirm-hero").style.display = "none";
+          });
+
       
+
+
+          function showHero(Message){
+            const hero = document.createElement("div");
+            hero.textContent = Message;
+            hero.style.position = "fixed";
+            hero.style.top = "20px";
+            hero.style.left = "80px";
+            if(Message !="Flight Deleted successfully" ){
+                hero.style.backgroundColor = "red";
+            }else{
+
+                hero.style.backgroundColor = "#4BB543";
+            }
+            hero.style.color = "#fff";
+            hero.style.padding = "25px 35px";
+            hero.style.borderRadius = "10px";
+            hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+            hero.style.fontWeight = "600";
+            hero.style.transition = "opacity 0.5s ease";
+            hero.style.opacity = "1";
+            hero.style.zIndex = "9999";
+            document.body.appendChild(hero);
+        
+            setTimeout(() => {
+              hero.style.opacity = "0";
+              setTimeout(() => {
+                document.body.removeChild(hero);
+              }, 500);
+            }, 3000);
+          }
+
+        </script>
+        
+        <script src="/Modules/interface.js"></script>
+         
 </body>
 </html>
