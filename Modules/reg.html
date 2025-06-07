@@ -38,14 +38,18 @@
         
         <form id="registerForm">
           <div class="form-group">
-            <label for="username">Username</label>
-            <input type="text" id="username" placeholder="Enter your username" required>
+            <label for="username">Email</label>
+            <input type="text" id="username" placeholder="Enter your username" >
+          </div>
+          <div class="form-group">
+            <label for="passport">Passport Number</label>
+            <input type="text" id="passport" placeholder="Enter your Passport Number"  />
           </div>
           <div class="form-group">
             <label for="password">Password</label>
-            <input type="password" id="password" placeholder="Enter your password" required>
+            <input type="password" id="password" placeholder="Enter your password" >
           </div>
-          <button type="submit" onclick="registerUser()">Register</button>
+          <button type="submit">Register</button>
         </form>
       </div>
     </div>
@@ -53,11 +57,6 @@
   </main>
 
     <script>
-
-      document.getElementById('registerForm').addEventListener('submit', function(e) {
-        e.preventDefault(); // Prevent form from submitting the traditional way
-  
-      });
 
       var Module = {
         onRuntimeInitialized: function() {
@@ -77,31 +76,104 @@
                console.log("Persistent filesystem loaded.");
          
                // safely call C functions
-               Module.ccall('loadFlightsFromFile', null, [], []);
+               //Module.ccall('loadFlightsFromFile', null, [], []);
   
           // Create wrappers for the C functions so they can be called from JavaScript.
-          window.registerUserC = Module.cwrap('register_user', 'number', ['string', 'string']);
+          window.registerUserC = Module.cwrap('register_user', 'number', ['string', 'string', 'string']);
         });
       }
       };
+
+    
+    document.getElementById('registerForm').addEventListener('submit', function(e) {
+        e.preventDefault();
+  
+      const email = document.getElementById("username").value.trim();
+      const password = document.getElementById("password").value;
+      const passport = document.getElementById("passport").value;
+
+
+      if(!email || !password || !passport){
+        showHero("please fill in all fields", "yellow");
+        return;
+      }
+
+      const pattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+      if (!pattern.test(email)) {
+        showHero("Please enter a valid email address.", "yellow");
+        return;
+      }
+
+      if (password.length < 8) {
+        showHero("Password must be at least 8 characters long.", "yellow");
+        return;
+      }
+
+      registerUser();
+
+  });
   
       // Function to register a user using the C function.
       function registerUser() {
         let username = document.getElementById('username').value;
+        let pass = document.getElementById('passport').value;
         let password = document.getElementById('password').value;
-        let res = window.registerUserC(username, password);
+        let res = window.registerUserC(username, password, pass);
         if (res === 0) {
-          alert("SignUp successful!");
+          showHero("SignUp successful!", "rgb(80, 255, 89)");
+          
+          FS.syncfs(false, function(err) {
+                  if (err) {
+                        console.error('Failed to sync to IndexedDB:', err);
+                  } else {
+                        console.log('Saved to IndexedDB.');
+                  } 
+                });
 
-           /* setTimeout(()=> {
-              window.location.href = "login.html";
-            }, 3000);*/
-        }  else {
-          alert("An Error Occurred. Please try again");
+          window.location.href = "/Modules/login.html";
+
+        }  else if (res === -2) {
+          showHero("Username already exists", "yellow");
+        }
+        else{
+          showHero("Error creating account please try again.", "red");
         }
       }
 
-    </script>
-    <script src="interface.js"></script>
+
+  function showHero(Message, color) {
+
+      const hero = document.createElement("div");
+      hero.textContent = Message;
+      hero.style.position = "fixed";
+      hero.style.top = "20px";
+      hero.style.left = "80px";
+      hero.style.backgroundColor = color;
+      hero.style.color = "rgb(15, 45, 59)";
+      hero.style.padding = "25px 35px";
+      hero.style.borderRadius = "10px";
+      hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+      hero.style.fontWeight = "600";
+      hero.style.transition = "opacity 0.5s ease";
+      hero.style.opacity = "1";
+      hero.style.zIndex = "9999";
+      document.body.appendChild(hero);
+
+      setTimeout(() => {
+        hero.style.opacity = "0";
+        setTimeout(() => {
+          document.body.removeChild(hero);
+        }, 500);
+      }, 3000);
+}
+  
+
+    
+
+ 
+</script>
+
+    <script src="/Modules/interface.js"></script>
 </body>
 </html>

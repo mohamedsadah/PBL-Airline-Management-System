@@ -88,11 +88,12 @@
   
   .login-container {
     background: rgba(11, 36, 44, 0.548);
-    padding: 40px;
+    padding: 30px;
     border-radius: 25px;
     border: none;
+    margin-top: 20px;
     width: 100%;
-    max-width: 400px;
+    max-width: 450px;
     color: #fff;
   }
   

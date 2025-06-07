@@ -489,6 +489,11 @@ TTY.init();
   // End ATPOSTCTORS hooks
 }
 
+function preMain() {
+  checkStackCookie();
+  // No ATMAINS hooks
+}
+
 function postRun() {
   checkStackCookie();
 
@@ -4039,6 +4044,70 @@ async function createWasm() {
   }
   }
 
+  var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
+      assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
+      return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
+    };
+  
+  function ___syscall_getdents64(fd, dirp, count) {
+  try {
+  
+      var stream = SYSCALLS.getStreamFromFD(fd)
+      stream.getdents ||= FS.readdir(stream.path);
+  
+      var struct_size = 280;
+      var pos = 0;
+      var off = FS.llseek(stream, 0, 1);
+  
+      var startIdx = Math.floor(off / struct_size);
+      var endIdx = Math.min(stream.getdents.length, startIdx + Math.floor(count/struct_size))
+      for (var idx = startIdx; idx < endIdx; idx++) {
+        var id;
+        var type;
+        var name = stream.getdents[idx];
+        if (name === '.') {
+          id = stream.node.id;
+          type = 4; // DT_DIR
+        }
+        else if (name === '..') {
+          var lookup = FS.lookupPath(stream.path, { parent: true });
+          id = lookup.node.id;
+          type = 4; // DT_DIR
+        }
+        else {
+          var child;
+          try {
+            child = FS.lookupNode(stream.node, name);
+          } catch (e) {
+            // If the entry is not a directory, file, or symlink, nodefs
+            // lookupNode will raise EINVAL. Skip these and continue.
+            if (e?.errno === 28) {
+              continue;
+            }
+            throw e;
+          }
+          id = child.id;
+          type = FS.isChrdev(child.mode) ? 2 :  // DT_CHR, character device.
+                 FS.isDir(child.mode) ? 4 :     // DT_DIR, directory.
+                 FS.isLink(child.mode) ? 10 :   // DT_LNK, symbolic link.
+                 8;                             // DT_REG, regular file.
+        }
+        assert(id);
+        HEAP64[((dirp + pos)>>3)] = BigInt(id);
+        HEAP64[(((dirp + pos)+(8))>>3)] = BigInt((idx + 1) * struct_size);
+        HEAP16[(((dirp + pos)+(16))>>1)] = 280;
+        HEAP8[(dirp + pos)+(18)] = type;
+        stringToUTF8(name, dirp + pos + 19, 256);
+        pos += struct_size;
+      }
+      FS.llseek(stream, idx * struct_size, 0);
+      return pos;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
   
   function ___syscall_ioctl(fd, op, varargs) {
   SYSCALLS.varargs = varargs;
@@ -4144,6 +4213,21 @@ async function createWasm() {
       path = SYSCALLS.calculateAt(dirfd, path);
       var mode = varargs ? syscallGetVarargI() : 0;
       return FS.open(path, flags, mode).fd;
+    } catch (e) {
+    if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
+    return -e.errno;
+  }
+  }
+
+  function ___syscall_renameat(olddirfd, oldpath, newdirfd, newpath) {
+  try {
+  
+      oldpath = SYSCALLS.getStr(oldpath);
+      newpath = SYSCALLS.getStr(newpath);
+      oldpath = SYSCALLS.calculateAt(olddirfd, oldpath);
+      newpath = SYSCALLS.calculateAt(newdirfd, newpath);
+      FS.rename(oldpath, newpath);
+      return 0;
     } catch (e) {
     if (typeof FS == 'undefined' || !(e.name === 'ErrnoError')) throw e;
     return -e.errno;
@@ -4337,6 +4421,52 @@ async function createWasm() {
   }
   }
 
+  
+  var runtimeKeepaliveCounter = 0;
+  var keepRuntimeAlive = () => noExitRuntime || runtimeKeepaliveCounter > 0;
+  var _proc_exit = (code) => {
+      EXITSTATUS = code;
+      if (!keepRuntimeAlive()) {
+        Module['onExit']?.(code);
+        ABORT = true;
+      }
+      quit_(code, new ExitStatus(code));
+    };
+  
+  
+  /** @param {boolean|number=} implicit */
+  var exitJS = (status, implicit) => {
+      EXITSTATUS = status;
+  
+      checkUnflushedContent();
+  
+      // if exit() was called explicitly, warn the user if the runtime isn't actually being shut down
+      if (keepRuntimeAlive() && !implicit) {
+        var msg = `program exited (with status: ${status}), but keepRuntimeAlive() is set (counter=${runtimeKeepaliveCounter}) due to an async operation, so halting execution but not exiting the runtime or preventing further async execution (you can use emscripten_force_exit, if you want to force a true shutdown)`;
+        err(msg);
+      }
+  
+      _proc_exit(status);
+    };
+
+  var handleException = (e) => {
+      // Certain exception types we do not treat as errors since they are used for
+      // internal control flow.
+      // 1. ExitStatus, which is thrown by exit()
+      // 2. "unwind", which is thrown by emscripten_unwind_to_js_event_loop() and others
+      //    that wish to return to JS event loop.
+      if (e instanceof ExitStatus || e == 'unwind') {
+        return EXITSTATUS;
+      }
+      checkStackCookie();
+      if (e instanceof WebAssembly.RuntimeError) {
+        if (_emscripten_stack_get_current() <= 0) {
+          err('Stack overflow detected.  You can try increasing -sSTACK_SIZE (currently set to 65536)');
+        }
+      }
+      quit_(1, e);
+    };
+
 
   var getCFunc = (ident) => {
       var func = Module['_' + ident]; // closure exported function
@@ -4350,10 +4480,6 @@ async function createWasm() {
     };
   
   
-  var stringToUTF8 = (str, outPtr, maxBytesToWrite) => {
-      assert(typeof maxBytesToWrite == 'number', 'stringToUTF8(str, outPtr, maxBytesToWrite) is missing the third parameter that specifies the length of the output buffer!');
-      return stringToUTF8Array(str, HEAPU8, outPtr, maxBytesToWrite);
-    };
   
   var stackAlloc = (sz) => __emscripten_stack_alloc(sz);
   var stringToUTF8OnStack = (str) => {
@@ -4521,7 +4647,6 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'getTempRet0',
   'setTempRet0',
   'zeroMemory',
-  'exitJS',
   'getHeapMax',
   'growMemory',
   'inetPton4',
@@ -4538,8 +4663,6 @@ if (Module['wasmBinary']) wasmBinary = Module['wasmBinary'];
   'autoResumeAudioContext',
   'getDynCaller',
   'dynCall',
-  'handleException',
-  'keepRuntimeAlive',
   'runtimeKeepalivePush',
   'runtimeKeepalivePop',
   'callUserCallback',
@@ -4708,6 +4831,7 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'stackRestore',
   'stackAlloc',
   'ptrToString',
+  'exitJS',
   'abortOnCannotGrowMemory',
   'ENV',
   'ERRNO_CODES',
@@ -4721,6 +4845,8 @@ missingLibrarySymbols.forEach(missingLibrarySymbol)
   'readEmAsmArgs',
   'runEmAsmFunction',
   'jstoi_s',
+  'handleException',
+  'keepRuntimeAlive',
   'asyncLoad',
   'mmapAlloc',
   'wasmTable',
@@ -4808,20 +4934,23 @@ function checkIncomingModuleAPI() {
   ignoredModuleProp('fetchSettings');
 }
 var ASM_CONSTS = {
-  70120: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 70271: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 70422: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 70573: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 70724: () => { FS.syncfs(true, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
- 70874: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); }
+  71384: () => { FS.syncfs(true, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 71534: () => { FS.syncfs(true, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 71684: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 71835: () => { FS.syncfs(false, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); },  
+ 71986: () => { FS.syncfs(true, function(err) { if (err) { console.error('Failed to sync to IndexedDB:', err); } else { console.log('Saved to IndexedDB.'); } }); }
 };
 var wasmImports = {
   /** @export */
   __syscall_fcntl64: ___syscall_fcntl64,
   /** @export */
+  __syscall_getdents64: ___syscall_getdents64,
+  /** @export */
   __syscall_ioctl: ___syscall_ioctl,
   /** @export */
   __syscall_openat: ___syscall_openat,
+  /** @export */
+  __syscall_renameat: ___syscall_renameat,
   /** @export */
   __syscall_rmdir: ___syscall_rmdir,
   /** @export */
@@ -4850,20 +4979,29 @@ var _free = Module['_free'] = createExportWrapper('free', 1);
 var _loadFlightsFromFile = Module['_loadFlightsFromFile'] = createExportWrapper('loadFlightsFromFile', 0);
 var _getAllFlightsJSON = Module['_getAllFlightsJSON'] = createExportWrapper('getAllFlightsJSON', 0);
 var _getOneWayFlightsJSON = Module['_getOneWayFlightsJSON'] = createExportWrapper('getOneWayFlightsJSON', 3);
-var _register_user = Module['_register_user'] = createExportWrapper('register_user', 2);
-var _login = Module['_login'] = createExportWrapper('login', 2);
+var _register_user = Module['_register_user'] = createExportWrapper('register_user', 3);
+var _login = Module['_login'] = createExportWrapper('login', 3);
 var _createInitialAdmins = Module['_createInitialAdmins'] = createExportWrapper('createInitialAdmins', 0);
-var _updateFlight = Module['_updateFlight'] = createExportWrapper('updateFlight', 6);
-var _deleteFlight = Module['_deleteFlight'] = createExportWrapper('deleteFlight', 1);
+var _updateFlight = Module['_updateFlight'] = createExportWrapper('updateFlight', 8);
+var _deleteFlight = Module['_deleteFlight'] = createExportWrapper('deleteFlight', 3);
 var _addPassenger = Module['_addPassenger'] = createExportWrapper('addPassenger', 5);
 var _loadPassengers = Module['_loadPassengers'] = createExportWrapper('loadPassengers', 0);
 var _getAllPassengersJSON = Module['_getAllPassengersJSON'] = createExportWrapper('getAllPassengersJSON', 0);
-var _main = createExportWrapper('main', 2);
+var _createPassengerRecords = Module['_createPassengerRecords'] = createExportWrapper('createPassengerRecords', 13);
+var _loadUserRecord = Module['_loadUserRecord'] = createExportWrapper('loadUserRecord', 1);
+var _getPassengerRecJSON = Module['_getPassengerRecJSON'] = createExportWrapper('getPassengerRecJSON', 0);
+var _deleteBookRecord = Module['_deleteBookRecord'] = createExportWrapper('deleteBookRecord', 1);
+var _deletePassenger = Module['_deletePassenger'] = createExportWrapper('deletePassenger', 2);
+var _CancellationNotif = Module['_CancellationNotif'] = createExportWrapper('CancellationNotif', 2);
+var _loadNotificationsJSON = Module['_loadNotificationsJSON'] = createExportWrapper('loadNotificationsJSON', 0);
+var _deleteNotificationsForUser = Module['_deleteNotificationsForUser'] = createExportWrapper('deleteNotificationsForUser', 1);
+var ___original_main = Module['___original_main'] = createExportWrapper('__original_main', 0);
+var _main = Module['_main'] = createExportWrapper('main', 2);
 var _fflush = createExportWrapper('fflush', 1);
 var _strerror = createExportWrapper('strerror', 1);
-var _unlink = Module['_unlink'] = createExportWrapper('unlink', 1);
 var _emscripten_stack_get_end = () => (_emscripten_stack_get_end = wasmExports['emscripten_stack_get_end'])();
 var _emscripten_stack_get_base = () => (_emscripten_stack_get_base = wasmExports['emscripten_stack_get_base'])();
+var _unlink = Module['_unlink'] = createExportWrapper('unlink', 1);
 var _emscripten_stack_init = () => (_emscripten_stack_init = wasmExports['emscripten_stack_init'])();
 var _emscripten_stack_get_free = () => (_emscripten_stack_get_free = wasmExports['emscripten_stack_get_free'])();
 var __emscripten_stack_restore = (a0) => (__emscripten_stack_restore = wasmExports['_emscripten_stack_restore'])(a0);
@@ -4875,6 +5013,27 @@ var _emscripten_stack_get_current = () => (_emscripten_stack_get_current = wasmE
 // === Auto-generated postamble setup entry stuff ===
 
 var calledRun;
+
+function callMain() {
+  assert(runDependencies == 0, 'cannot call main when async dependencies remain! (listen on Module["onRuntimeInitialized"])');
+  assert(typeof onPreRuns === 'undefined' || onPreRuns.length == 0, 'cannot call main when preRun functions remain to be called');
+
+  var entryFunction = _main;
+
+  var argc = 0;
+  var argv = 0;
+
+  try {
+
+    var ret = entryFunction(argc, argv);
+
+    // if we're not running an evented main loop, it's time to exit
+    exitJS(ret, /* implicit = */ true);
+    return ret;
+  } catch (e) {
+    return handleException(e);
+  }
+}
 
 function stackCheckInit() {
   // This is normally called automatically during __wasm_call_ctors but need to
@@ -4913,10 +5072,13 @@ function run() {
 
     initRuntime();
 
+    preMain();
+
     Module['onRuntimeInitialized']?.();
     consumedModuleProp('onRuntimeInitialized');
 
-    assert(!Module['_main'], 'compiled without a main, but one is present. if you added it from JS, use Module["onRuntimeInitialized"]');
+    var noInitialRun = Module['noInitialRun'] || false;
+    if (!noInitialRun) callMain();
 
     postRun();
   }

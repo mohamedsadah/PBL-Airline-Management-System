@@ -1,0 +1,455 @@
+/* Reset & Base */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: url("/images/fl.jpg") no-repeat center center/cover;
+  background-attachment: fixed;
+  backdrop-filter: blur(10px);
+  color: #fff;
+  overflow-x: hidden;
+}
+
+/* Top Banner */
+.nav {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+  background: linear-gradient(rgb(0,0,0,0), rgba(0, 0, 0, 0.9)), 
+              url('/images/fl.jpg') no-repeat center center/cover;
+  width: 98%;
+  margin: 5px auto;
+  border-radius: 20px;
+  height: 30vh;
+  position: relative;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  font-size: 2em;
+  font-weight: bold;
+  color: #fff;
+}
+
+.logo img {
+  width: 80px;
+  height: 60px;
+  margin-right: 10px;
+}
+
+/* Navigation */
+.nav-div {
+  width: 98%;
+  margin: 10px auto;
+  height: 10vh;
+  background: rgba(31, 41, 55, 0.85);
+  color: #e0f2f1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 35px;
+  font-size: 1rem;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.3);
+  border-radius: 15px;
+}
+
+/* Navigation Buttons */
+.nav-buttons {
+  display: flex;
+  gap: 15px;
+}
+
+.nav-div button {
+  padding: 10px 22px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#home,
+.book-btn {
+  background: linear-gradient(145deg, #00ff87, #60efff);
+  color: #000;
+}
+
+#home:hover,
+.book-btn:hover {
+  background: linear-gradient(145deg, #32ffac, #bffeff);
+  transform: scale(1.05);
+}
+
+.book-btn{
+  padding: 20px 25px;
+  border: none;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 1rem;
+  margin: 0 auto;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+#logout {
+  background: linear-gradient(145deg, #ff6b81, #ff4757);
+  color: white;
+}
+
+#logout:hover {
+  background: linear-gradient(145deg, #ff4757, #ff6b81);
+  transform: scale(1.05);
+}
+
+/* Dashboard Content */
+#dashboard-content {
+  padding: 25px;
+  width: 98%;
+  background: rgba(17, 25, 40, 0.85);
+  border-radius: 20px;
+  margin: 0 auto;
+  transition: all 0.3s ease-in-out;
+}
+
+#dashboard-content h2 {
+  margin-bottom: 30px;
+  font-size: 1.2rem;
+  color: #d1f3ff;
+  text-align: left;
+}
+
+/* Bookings Container */
+#bookingsContainer {
+  display: flex;
+  flex-direction: column;
+  padding-right: 20px;
+}
+
+/* Booking Card */
+.booking-card {
+  display: flex;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  padding: 15px;
+  margin: 10px;
+  border-radius: 15px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #fff;
+  box-shadow: 0 12px 35px rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+}
+
+.booking-card > div {
+  text-align: left;
+}
+
+.booking-card:hover {
+  transform: scale(1.02);
+  box-shadow: 1px 1px 10px #26de81;
+}
+
+.no-flight-display {
+  display: flex;
+  justify-content: center;
+  margin: 15px auto;
+  margin-bottom: 20px;
+  padding: 15px 10px;
+  width: 300px;
+  font-weight: bold;
+  background: #fffcfc;
+  color: #333;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  border-radius: 15px;
+}
+
+/* Action Buttons */
+.card-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+}
+
+
+.cancel-btn,
+.download-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 0.95rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+
+.download-btn {
+  background-color: #26de81;
+  color: #fff;
+}
+
+
+.download-btn:hover {
+  background-color: #20bf6b;
+  transform: scale(1.05);
+}
+
+.cancel-btn {
+  background-color: #ff6b6b;
+  color: #fff;
+}
+
+.cancel-btn:hover {
+  background-color: #ff4757;
+  transform: scale(1.05);
+}
+
+.welcome-msg {
+  margin-bottom: 10px;
+  border-radius: 5px;
+  width: 320px;
+  padding: 15px;
+  font-weight: bold;
+}
+
+.content-top {
+  width: 95%;
+  margin: 0 auto;
+  padding: 0;
+  height: 25px;
+}
+
+.flight-details {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+  font-weight: bold;
+}
+
+.flight-number {
+  font-size: 20px;
+}
+
+.flight-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.flight-row span {
+  margin: 0px 15px;
+  color: #e0ffff;
+}
+
+.flight-image {
+  display: flex;
+}
+
+.flight-image img {
+  width: 90px;
+  height: 85px;
+  border-radius: 60px;
+}
+
+.buttons {
+  display: flex;
+  justify-content: space-between;
+  margin: 20px;
+  align-items: center;
+  width: 200px;
+}
+
+/* Modal background overlay */
+.notification-modal {
+  display: flex;
+  flex-direction: column;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.5);
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+/* Modal box */
+.notification-box {
+  display: flex;
+  background: #fff;
+  justify-content: space-between;
+  padding: 30px 20px;
+  border-radius: 12px;
+  margin: 10px 0;
+  max-width: 90%;
+  width: 80%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  text-align: center;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  position: relative;
+  transition: 0.15s ease-in-out;
+  animation: popIn 0.3s ease-out;
+}
+
+.notification-box:hover {
+  transform: scale(1.05);
+}
+
+.notification-message {
+  font-size: 16px;
+  color: #333;
+}
+
+.notification-btn {
+  padding: 8px 16px;
+  margin: 0 6px;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.notification-ok {
+  background-color: #28a745;
+  color: white;
+}
+
+.notification-close {
+  background-color: #dc3545;
+  color: white;
+}
+
+/* Animation */
+@keyframes popIn {
+  from {
+    opacity: 0;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+/* Responsive Adjustments */
+
+/* Tablet */
+@media (max-width: 768px) {
+  .nav-div {
+    flex-direction: column;
+    padding: 20px;
+    gap: 15px;
+    height: auto;
+  }
+
+  .nav-buttons {
+    flex-direction: column;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nav-div button {
+    width: 80%;
+    font-size: 1rem;
+    margin: 5px;
+  }
+
+  #dashboard-content {
+    margin: 15px;
+    padding: 20px;
+  }
+
+  #bookingsContainer, .flight-details, .flight-image img, .flight-row{
+    flex-direction: column;
+  }
+
+  .booking-card {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    align-items: center;
+  }
+
+  .card-actions {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .reschedule-btn,
+  .cancel-btn,
+  .download-btn {
+    width: 100%;
+    margin: 10px;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .nav-div {
+    font-size: 1.2rem;
+    padding: 15px;
+  }
+
+  .nav-div h1 {
+    font-size: 1.3rem;
+    text-align: center;
+  }
+
+  .nav-buttons {
+    gap: 8px;
+  }
+
+  .nav-div button {
+    padding: 10px 15px;
+    font-size: 0.95rem;
+  }
+
+  #dashboard-content h2 {
+    font-size: 1.1rem;
+    text-align: center;
+  }
+
+  .booking-card h3 {
+    font-size: 1rem;
+  }
+  
+
+  #bookingsContainer, .flight-details, .flight-image img, .flight-row{
+    flex-direction: column;
+  }
+
+  .booking-card {
+    flex-direction: column;
+    gap: 15px;
+    padding: 20px;
+    align-items: center;
+  }
+
+  .booking-card p {
+    font-size: 0.9rem;
+  }
+
+  .welcome-msg {
+    padding: 10px;
+    font-size: 0.9rem;
+  }
+
+  .content-top {
+    padding: 10px;
+  }
+}

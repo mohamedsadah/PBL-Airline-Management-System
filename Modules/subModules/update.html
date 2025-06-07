@@ -38,7 +38,7 @@
         <h1>Update Flight</h1>
         <form id="updateFlightForm">
             <div class="input">
-              <input type="text" id="flightNumber" name="flightNumber" placeholder="Enter Flight Number" required>
+              <input type="text" id="flightNumber" value="GEU-" name="flightNumber" placeholder="Enter Flight Number" required>
             <span id="search">Search</span>
             </div>
              
@@ -48,6 +48,9 @@
     </div>
       <script>
         let allflights = [];
+
+        const user = localStorage.getItem("loggedInUser");
+        const userpass = localStorage.getItem("userpass");
 
         var Module = {
           onRuntimeInitialized: function(){
@@ -68,14 +71,19 @@
                   // safely call C functions
                   Module.ccall('loadFlightsFromFile', null, [], []);
                   const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
+
+                  if(user){
+                    Module.ccall("loadUserRecord", null, ["string"],[userpass]);
+                    window.addNotification = Module.cwrap("CancellationNotif", "number", ["string","string"]);
+                  }
                 
                 window.updateFlightC = Module.cwrap('updateFlight', 'number', 
-                  ['string', 'string', 'string', 'string', 'string', 'string']);
+                  ['string', 'string', 'string', 'string', 'string', 'string', 'string', 'string']);
               
             
       const jsonData = getAllFlightsJSON();
       allflights = JSON.parse(jsonData);
-      console.log(allflights.map(f => f.flightNumber));//check if flights are recieved
+    //   console.log(allflights.map(f => f.flightNumber));//check if flights are recieved
 
     });
   }
@@ -112,6 +120,7 @@ document.getElementById('search').addEventListener('click', function() {
                         <div class="flight-dates">
                             <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
                             <small>Arrives: ${flight.arrivalDate} → ${flight.Atime}</small>
+                            <small>Available seats: ${flight.seats > 0 ? flight.seats : "full"}</small>
                             <small>Status: ${flight.status}</small>
                         </div>
                     </div>
@@ -148,61 +157,75 @@ document.getElementById('search').addEventListener('click', function() {
     }
 });
 
-
 function toggleField() {
     const inputsArea = document.getElementById('inputsArea');
-    inputsArea.innerHTML = ''; 
+    inputsArea.innerHTML = ''; // Clear previous fields
+
+    const today = new Date().toISOString().split('T')[0];
+
+    function createField(labelText, type, id, name, placeholder = '') {
+        const wrapper = document.createElement('div');
+
+        const label = document.createElement('label');
+        label.setAttribute('for', id);
+        label.textContent = labelText;
+
+        const input = document.createElement('input');
+        input.type = type;
+        input.id = id;
+        input.name = name;
+        input.required = true;
+        if (placeholder) input.placeholder = placeholder;
+        if (type === 'date') input.min = today;
+
+        wrapper.appendChild(label);
+        wrapper.appendChild(input);
+        wrapper.appendChild(document.createElement('br'));
+
+                // After appending the new element:
+        wrapper.classList.add('input-field');
+
+        // Force reflow before adding 'show'
+        void wrapper.offsetWidth; // forces a reflow
+        wrapper.classList.add('show');
+
+        inputsArea.appendChild(wrapper);
+    }
 
     if (document.getElementById('updateDepartureDate').checked) {
-        inputsArea.innerHTML += `
-            <div class="input-field show">
-              <label for="departureDate">Departure Date:</label>
-             <input type="date" id="departureDate" name="departureDate" required><br>
-            </div>
-        `;
+        createField("Departure Date:", "date", "departureDate", "departureDate");
     }
     if (document.getElementById('updateReturnDate').checked) {
-        inputsArea.innerHTML += `
-        <div class="input-field show">
-            <label for="returnDate">Return Date:</label>
-            <input type="date" id="returnDate" name="returnDate" required><br>
-        </div>
-        `;
+        createField("Return Date:", "date", "returnDate", "returnDate");
     }
     if (document.getElementById('updateFlightTime').checked) {
-        inputsArea.innerHTML += `
-        <div class="input-field show">
-            <label for="flightTime">Flight Time:</label>
-            <input type="time" id="flightTime" name="flightTime" required><br>
-          </div>
-        `;
-        
+        createField("Flight Time:", "time", "flightTime", "flightTime");
     }
     if (document.getElementById('updateArrivalTime').checked) {
-        inputsArea.innerHTML += `
-        <div class="input-field show">
-            <label for="flightAtime">Flight Status:</label>
-            <input type="time" id="ArrivalTime" name="flightAtime" required><br>
-          </div>
-        `;
-        
+        createField("Flight Status:", "time", "ArrivalTime", "flightAtime");
     }
     if (document.getElementById('updateStatus').checked) {
-        inputsArea.innerHTML += `
-        <div class="input-field show">
-            <label for="flightStatus">Flight Status:</label>
-            <input type="text" id="flightStatus" name="flightStatus" placeholder="Active or Delayed" required><br>
-          </div>
-        `;
-        
+        createField("Flight Status:", "text", "flightStatus", "flightStatus", "Active or Delayed");
+    }
+
+    // Set returnDate.min = departureDate when both are present
+    const dDate = document.getElementById("departureDate");
+    const aDate = document.getElementById("returnDate");
+
+    if (dDate && aDate) {
+        dDate.addEventListener("change", () => {
+            aDate.min = dDate.value;
+        });
+
+        // Also set it immediately if a departure date is already chosen
+        if (dDate.value) {
+            aDate.min = dDate.value;
+        }
     }
 }
 
-const today = new Date().toISOString().split('T');
 
-document.querySelectorAll('input[type="date"]').forEach(input => {
-  input.min = today[0];
-});
+
 
      document.getElementById('updateFlightForm').addEventListener('submit', function(event) {
           event.preventDefault(); 
@@ -260,9 +283,12 @@ document.querySelectorAll('input[type="date"]').forEach(input => {
             }
 
             
+            const path = `/persistent/${userpass}.dat`;
 
             
             const result = window.updateFlightC(
+                "root",
+                "file",
                 departureInput, 
                 returnInput,    
                 timeInput,
@@ -271,7 +297,36 @@ document.querySelectorAll('input[type="date"]').forEach(input => {
                 flightNum
             );
 
-            console.log("Result from C function:", result);
+            console.log("\nResult from update function:", result);
+
+            if(user){
+                    const result2 = window.updateFlightC(
+                    "PR",
+                    path,
+                    departureInput, 
+                    returnInput,    
+                    timeInput,
+                    atimeInput, 
+                    status,     
+                    flightNum
+                ); 
+
+                const res3 = window.addNotification(flightNum, "Update");
+
+                FS.syncfs(false, function(err) {
+                    if (err) {
+                    console.error("Failed to sync to IndexedDB:", err);
+                    } else {
+                    console.log("Saved to IndexedDB.");
+                    }
+                });
+
+                console.log("\nResult from updateUser function:", result2);
+                console.log("Result from notif function:", res3);
+                
+            }
+
+
 
             if (result === 1) {
                 showHero('Flight updated successfully!');

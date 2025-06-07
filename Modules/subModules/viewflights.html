@@ -88,6 +88,7 @@
                     <div class="flight-dates">
                         <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
                         <small>Arrives: ${flight.arrivalDate} - ${flight.Atime}</small>
+                        <small>Available seat: ${flight.seats > 0 ? flight.seats : "full"}</small>
                         <small>Status: ${flight.status}</small>
                     </div>
                 </div>
@@ -112,6 +113,7 @@
             }
           }
         
+          let jsonData;
           // Main module logic
           var Module = {
             onRuntimeInitialized: function () {
@@ -133,7 +135,7 @@
         
                 // Get all flights in JSON format
                 const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
-                const jsonData = getAllFlightsJSON();
+                 jsonData = getAllFlightsJSON();
         
                 console.log("Raw JSON from C:", jsonData);
         
@@ -144,13 +146,17 @@
 
                 } catch (e) {
                   console.error("JSON Parse Error:", e);
+                }finally{
+                  Module._free(jsonData);
                 }
+
               });
             }
           };
         
           // Attach search input event listener
           searchInput.addEventListener('input', handleSearchInput);
+
         </script>
         
         <script src="/Modules/interface.js"></script>

@@ -66,6 +66,9 @@
 
         <script>
 
+          const user = localStorage.getItem("loggedInUser");
+          const userpass = localStorage.getItem("userpass");
+
           const container = document.querySelector(".flights-container");
           const searchInput = document.querySelector(".view-header input");
           let allFlights = [];
@@ -88,14 +91,22 @@
         
                 // Load flight data into C BST
                 window.load = Module.cwrap('loadFlightsFromFile', null, [], []);
+                Module.ccall('loadPassengers', null, [], []);
+
                 
                 window.load();
                 // Get all flights in JSON format
                 const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', []);
                 const jsonData = getAllFlightsJSON();
 
-                window.cancelFlightsC = Module.cwrap('deleteFlight', 'number', ['string'], []);
-        
+                window.cancelFlightsC = Module.cwrap('deleteFlight', 'number', ['string','string','string'], []);
+
+                if(user){
+                  window.deleteFlightRec = Module.cwrap("deleteBookRecord", null, ['string']);
+                  window.addNotification = Module.cwrap("CancellationNotif", "number", ["string","string"]);
+                }
+                window.deletePassenger = Module.cwrap('deletePassenger', 'number', ['string','string']);
+
                 console.log("Raw JSON from C:", jsonData);
         
                 try {
@@ -105,6 +116,8 @@
 
                 } catch (e) {
                   console.error("JSON Parse Error:", e);
+                }finally{
+                  Module._free(jsonData);
                 }
               });
             }
@@ -142,6 +155,7 @@
                     <div class="flight-dates">
                         <small>Stops: ${flight.stops && flight.stops.length > 0 ? flight.stops.map(stop => `<span>${stop}</span>`).join(', ') : 'None'}</small>
                         <small>Arrives: ${flight.arrivalDate} - ${flight.Atime}</small>
+                        <small>Available seats: ${flight.seats > 0 ? flight.seats : "full"}</small>
                         <small>Status: ${flight.status}</small>
                     </div>
                 </div>
@@ -191,13 +205,32 @@
           document.getElementById("confirm-yes").addEventListener("click", () => {
             if (selectedFlight) {
               console.log(selectedFlight);
-              let result = window.cancelFlightsC(selectedFlight);
+              let result = window.cancelFlightsC(selectedFlight, "rt", "file");
               if(result == 1){
-                showHero("Flight Deleted successfully");
-                setTimeout(() =>{
-                  window.location.reload();
+                if(user){
+                  window.deleteFlightRec(selectedFlight);
+                  const res3 = window.addNotification(selectedFlight, "Cancel");
+                  const res2 = window.deletePassenger(userpass, selectedFlight);
+                  console.log("\np_deleted:",res2);
+                  console.log("\nnotif added:",res3);
 
-                }, 5000);
+                }
+                showHero("Flight Cancelled successfully");
+
+              
+                FS.syncfs(false, function(err) {
+                  if (err) {
+                        console.error('Failed to sync to IndexedDB:', err);
+                  } else {
+                        console.log('Saved to IndexedDB.');
+                  } 
+                });
+  
+                // setTimeout(() =>{
+                //   window.location.reload();
+
+                // }, 5000);
+   
               } else {
                 showHero("Error deleting flight");
               }

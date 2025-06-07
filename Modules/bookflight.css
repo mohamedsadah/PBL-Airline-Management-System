@@ -67,7 +67,8 @@
   #flight-summary {
     display: flex;
     justify-content: space-between;
-    background: #0ffc43ce;
+    background: #041e2b;
+    color: white;
     padding: 20px;
     border-radius: 10px;
     margin: 15px 0 15px 0;
@@ -114,7 +115,7 @@
     justify-content: space-between;
     font-size: 18px;
     
-    color: #555;
+    color: #ffffff;
   }
 
 

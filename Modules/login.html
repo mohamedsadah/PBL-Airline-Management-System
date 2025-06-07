@@ -1,11 +1,13 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Skycoders Airline Management System - Login</title>
   <link rel="stylesheet" href="./login.css" />
 </head>
+
 <body>
   <!-- Transparent Navbar -->
   <header>
@@ -34,6 +36,10 @@
               <input type="text" id="username" placeholder="Enter your username" required />
             </div>
             <div class="form-group">
+              <label for="passport">Passport Number</label>
+              <input type="text" id="passport" placeholder="Enter your Passport Number" required />
+            </div>
+            <div class="form-group">
               <label for="password">Password</label>
               <input type="password" id="password" placeholder="Enter your password" required />
             </div>
@@ -50,58 +56,117 @@
   </main>
   <script>
 
-    document.getElementById('loginForm').addEventListener('submit', function(e) {
-      e.preventDefault(); // Prevent form from submitting the traditional way
+    document.getElementById('loginForm').addEventListener('submit', function (e) {
+      e.preventDefault(); 
 
     });
 
     var Module = {
-        onRuntimeInitialized: function() {
-          // Create persistent mount in JS
-          FS.mkdir('/persistent');
-          FS.mount(IDBFS, {}, '/persistent');
-      
-          //  Wait for sync
-          FS.syncfs(true, function (err) {
+      onRuntimeInitialized: function () {
+        // Create persistent mount in JS
+        FS.mkdir('/persistent');
+        FS.mount(IDBFS, {}, '/persistent');
+
+        //  Wait for sync
+        FS.syncfs(true, function (err) {
 
 
-              if (err) {
-                console.error("Error syncing FS:", err);
-                return;
-              }
-        
-              console.log("Persistent filesystem loaded.");
-        
-              // safely call C functions
-              Module.ccall('loadFlightsFromFile', null, [], []);
-              Module.ccall('createInitialAdmins', null, [], []);
+          if (err) {
+            console.error("Error syncing FS:", err);
+            return;
+          }
+
+          console.log("Persistent filesystem loaded.");
+
+          // safely call C functions
+          Module.ccall('loadFlightsFromFile', null, [], []);
+          Module.ccall('createInitialAdmins', null, [], []);
           // Create wrappers for the C functions so they can be called from JavaScript.
-          window.loginC = Module.cwrap('login', 'number', ['string', 'string']);
-            });
-        }
-      };
-
-       // Function to perform login validation using the C function.
-    function loginUser() {
-        let username = document.getElementById('username').value;
-        let password = document.getElementById('password').value;
-        let res = window.loginC(username, password);
-        if (res === 1) {
-          if(username == "admin"){
-            window.location.href = "/Modules/admin.html";
-          }else{
-              alert('Login successful!');
-              //user dashboard to be implemented soon.
-            }
-        } else if (res === 0) {
-         alert('Invalid credentials');
-        } else {
-          alert('User not available');
-        }
+          window.loginC = Module.cwrap('login', 'number', ['string', 'string', 'string']);
+        });
       }
+    };
+
+    // Function to perform login validation using the C function.
+    function loginUser() {
+      let username = document.getElementById('username').value;
+      let password = document.getElementById('password').value;
+      let passport = document.getElementById('passport').value;
+
+
+      if(!username || !password){
+        showHero("Please Fill all Fields", "yellow");
+        return;
+      }
+
+      if(username != "admin" && !passport){
+        showHero("Please Enter passport Number", "yellow");
+        return;
+      }
+
+      let res = window.loginC(username, password, passport);
+      if (res === 1) {
+        if (username == "admin") {
+          window.location.href = "/Modules/admin.html";
+        } else {
+          showHero('Login successful!', "rgb(80, 255, 89)");
+          localStorage.setItem("isLoggedIn", "true");
+          localStorage.setItem("loggedInUser", username);
+          localStorage.setItem("userpass", passport);
+          // localStorage.setItem("seatsGenerator", false);
+
+
+          FS.syncfs(false, function(err) {
+              if (err) {
+                    console.error('Failed to sync to IndexedDB:', err);
+              } else {
+                    console.log('Saved to IndexedDB.');
+                  } 
+                });
+
+
+          window.location.href = "./landing.html";
+        }
+      } else if (res === 0) {
+        showHero('Invalid credentials', "rgb(253, 78, 72)");
+      } else {
+        showHero('User not available', "yellow");
+      }
+    }
+
+    function showHero(Message, color) {
+
+      const hero = document.createElement("div");
+      hero.textContent = Message;
+      hero.style.position = "fixed";
+      hero.style.top = "20px";
+      hero.style.left = "80px";
+      hero.style.backgroundColor = color;
+      if(Message=="Invalid credentials"){
+        hero.style.color = "white";
+      }else{
+        hero.style.color = "rgb(15, 45, 59)";
+      }
+      hero.style.padding = "25px 35px";
+      hero.style.borderRadius = "10px";
+      hero.style.boxShadow = "0 4px 12px rgba(0,0,0,0.15)";
+      hero.style.fontWeight = "600";
+      hero.style.transition = "opacity 0.5s ease";
+      hero.style.opacity = "1";
+      hero.style.zIndex = "9999";
+      document.body.appendChild(hero);
+
+      setTimeout(() => {
+        hero.style.opacity = "0";
+        setTimeout(() => {
+          document.body.removeChild(hero);
+        }, 500);
+      }, 3000);
+    }
 
   </script>
 
   <script src="/Modules/interface.js"></script>
 </body>
+
 </html>

@@ -38,7 +38,7 @@
         </div>
         
         <form class="add-flight">
-            <h1>Add Flight</h1>
+            <h1 id="top">Add Flight</h1>
             <h2>Flight Number </h2>
           <input type="text" placeholder="Flight Number" id="flightNumber" value="GEU-" maxlength="10" required>
           <h2>Departure </h2>
@@ -143,11 +143,21 @@
               e.preventDefault();
               sendFlightDataToC();
             });
+          });
 
+
+          
             const today = new Date().toISOString().split('T');
 
             document.querySelectorAll('input[type="date"]').forEach(input => {
               input.min = today[0];
+            });
+
+            const dDate = document.getElementById("departDate");
+            const aDate = document.getElementById("arrivalDate");
+            dDate.addEventListener("change", () => {
+              const depDate = dDate.value; // already in YYYY-MM-DD format
+              aDate.min = depDate;
             });
           
             function sendFlightDataToC() {
@@ -163,6 +173,7 @@
               const stopInputs = document.querySelectorAll(".stop-input");
               const price = document.getElementById("price").value.trim();
   
+
               if (!fNum || !dep || !dest || !dDate || !aDate || !time || !atime) {
                   showHero("Please fill in all the required flight information fields.");
                   return;
@@ -214,6 +225,22 @@
               }
                else if (res === 1) {
                  showHero("Flight Added Successfully");
+
+                 FS.syncfs(false, function(err) {
+                  if (err) {
+                        console.error('Failed to sync to IndexedDB:', err);
+                  } else {
+                        console.log('Saved to IndexedDB.');
+                  } 
+                });
+
+                 setTimeout(()=>{
+                   document.querySelectorAll("input").forEach((input) => {
+                    input.value = "";
+                    document.getElementById("flightNumber").value = "GEU-";
+                    window.location.href = "#top";
+                 })
+                 }, 1000);
               }
               else{
               showHero("Error saving Data");
@@ -228,8 +255,7 @@
               console.log(fNum, dep, dest, dDate, aDate, time, atime, stopListPtr, stopCount,price);
              
             }
-              });
-
+              
         }
     };
 

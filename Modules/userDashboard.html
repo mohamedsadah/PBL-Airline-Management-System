@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>User Dashboard</title>
+  <link rel="stylesheet" href="./userDashboard.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode/build/qrcode.min.js"></script>
+
+</head>
+<body data-auth-required>
+    <img id="logo" src="/images/logo.png" style="display:none;" />
+    <img id="bg" src="/images/fl.jpg" style="display:none;" />
+    
+<div class="nav">
+    <div class="logo">
+      <img src="/images/logo.png" alt="Skycoders Logo" />
+      <span>Skycoders Airline Management System</span>
+    </div>
+</div>
+
+<div class="nav-div">
+    <div class="welcome-msg">
+        Welcome, <span id="usernameSpan"></span>
+      </div>
+
+    <div>
+        <button id="home">Home</button>
+        <button id="home">Book Flight</button>
+        <button id="logout">Logout</button>
+    </div>
+</div>
+
+
+<div class="main-content">
+  <section id="dashboard-content">
+<div class="content-top">
+        <h2>Your Booked Flights</h2>
+</div>
+    
+    <div id="bookingsContainer"></div>
+  </section>
+
+  <script>
+
+    let record = [];
+    let notifications = [];
+
+    const user = localStorage.getItem("loggedInUser");
+    const userpass = localStorage.getItem("userpass");
+
+    var Module = {
+      
+    onRuntimeInitialized: function () {
+
+    FS.mkdir("/persistent");
+    FS.mount(IDBFS, {}, "/persistent");
+    FS.syncfs(true, function (err) {
+      if (err) {
+        console.error("Error syncing FS:", err);
+        return;
+      }
+
+      console.log("Persistent filesystem loaded.");
+
+    Module.ccall('loadPassengers', null, [], []);
+    Module.ccall('loadFlightsFromFile', null, []);
+
+    if(userpass) {
+    
+    Module.ccall("loadUserRecord", null, ["string"],[userpass]);
+
+    window.cancelFlightsC = Module.cwrap('deleteFlight', 'number', ['string','string','string']);
+    window.deletePassenger = Module.cwrap('deletePassenger', 'number', ['string','string']);
+    window.deleteUserNotifications = Module.cwrap('deleteNotificationsForUser', 'number', ['string']);
+    const ptr = Module.ccall("getPassengerRecJSON", "number", []);
+    const json = Module.UTF8ToString(ptr);
+    record = JSON.parse(json);
+    console.log(record);
+    
+    const Notif = Module.ccall('loadNotificationsJSON', 'number', []);
+    const notifjson = null;
+    if(Notif){
+      const notifjson = Module.UTF8ToString(Notif);
+      notifications = JSON.parse(notifjson);
+      if(notifications.length > 0) showPopupNotifications(notifications, userpass);
+    }
+    
+    Module._free(ptr);
+    Module._free(json);
+    Module._free(Notif);
+    Module._free(notifjson);
+
+    }
+    
+        
+
+    
+
+    if (!user) {
+      window.location.href = "./login.html";
+    } else {
+      document.getElementById("usernameSpan").textContent = user.split("@")[0];
+
+      const container = document.getElementById("bookingsContainer");
+      container.innerHTML = "";
+
+      if (record.length === 0) {
+              const noResult = document.createElement('div');
+              const bookbtn = document.createElement('button');
+              noResult.textContent = 'No Booked Flights';
+              bookbtn.textContent = 'Book a flight';
+              noResult.classList.add("no-flight-display");
+              bookbtn.classList.add("book-btn");
+              bookbtn.style.color = "#1f2937";
+              container.appendChild(noResult);
+              container.appendChild(bookbtn);
+
+              document.querySelector(".book-btn").addEventListener('click', (e)=>{
+                window.location.href = "./landing.html";
+              })
+              return;
+            }
+
+      record.forEach(b => {
+        const card = document.createElement("div");
+        card.className = "booking-card";
+        card.innerHTML = `
+        <div class="flight-details">
+
+            <div class="flight-image">
+                    <img src="/images/fl.jpg" alt="Flight">
+                
+                  <div class="flight-row">
+                      <span class="flight-number">${b.flightNumber}</span>
+                      <span>${b.departure} → ${b.destination}</span>
+                      <span>Date: ${b.departDate}</span>
+                      <span>Status: ${b.status}</span>
+                  </div>
+            </div>
+                      
+            <div class="buttons">
+                <button class="download-btn" onclick="Itenary(this)">Itenerary</button>
+                <button class="cancel-btn" onclick="confirmCancel(this)">Cancel</button>
+            </div>
+        </div>
+
+        `;
+        container.appendChild(card);
+          });
+
+        }
+      });
+   }
+}
+
+  
+    //cancel logic
+
+   const path = `/persistent/${userpass}.dat`;
+
+    function confirmCancel(button) {
+      const bookingCard = button.closest(".booking-card");
+      const flight = bookingCard.querySelector(".flight-number")?.textContent || "this booking";
+
+    Swal.fire({
+        title: `Cancel Booking for Flight ${flight}?`,
+        text: "This action cannot be undone.",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#d63031",
+        cancelButtonColor: "#6c757d",
+        confirmButtonText: "Yes, cancel",
+        cancelButtonText: "No"
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const res = window.cancelFlightsC(flight, "PR", path);
+            const res2 = window.deletePassenger(userpass, flight);
+
+            FS.syncfs(false, function(err) {
+                if (err) {
+                    console.error('Failed to sync to IndexedDB:', err);
+                } else {
+                    console.log('Saved to IndexedDB.');
+                } });
+
+            console.log(res);
+            console.log("\npassenger deleted:", res2);
+
+        if(res==1){
+        // Toast message
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'success',
+                title: `${flight} cancelled`,
+                showConfirmButton: false,
+                timer: 7000,
+                timerProgressBar: true,
+                background: '#1cf140',
+                color: '#1f2937',
+                iconColor: '#00cec9',
+            });
+
+                
+            setTimeout(() =>{
+              window.location.reload();
+            }, 2000);
+
+
+        }else{
+            Swal.fire({
+                toast: true,
+                position: 'top-end',
+                icon: 'alert',
+                title: `Could not cancel ${flight}. Try Again please`,
+                showConfirmButton: false,
+                timer: 4000,
+                timerProgressBar: true,
+                background: 'rgb(255, 15, 0)',
+                color: 'black',
+                iconColor: '#00cec9',
+            });
+        }
+    }
+    });
+
+    
+    }
+
+    const storedUserData = localStorage.getItem("userRec");
+
+        let userData = {};
+        if (storedUserData) {
+          userData = JSON.parse(storedUserData);
+        }
+
+        console.log(userData.name);
+        console.log(userpass);
+   
+
+    function Itenary(button){
+      const bookingCard = button.closest(".booking-card");
+      const flight = bookingCard.querySelector(".flight-number")?.textContent || "this booking";
+
+      record.forEach((r)=>{
+        if(r.flightNumber === flight){
+          generateItinerary(userData, r);
+        }
+      });
+    }
+
+
+    document.getElementById("logout").addEventListener("click", () => {
+      localStorage.clear();
+      window.location.href = "./landing.html";
+    });
+
+    document.querySelectorAll("#home").forEach((button) => {
+      button.addEventListener('click', () => {
+        window.location.href = "./landing.html";
+      })
+    });
+
+    
+
+
+    function showPopupNotifications(notifications, userpass) {
+  const modal = document.createElement("div");
+  modal.className = "notification-modal";
+
+  // Track how many boxes user must close
+  let remaining = 0;
+
+  notifications.forEach((notif) => {
+    if (notif.passportNo === userpass) {
+      remaining++;
+
+      const box = document.createElement("div");
+      box.className = "notification-box";
+
+      const message = document.createElement("p");
+      message.className = "notification-message";
+      message.textContent = (notif.type === "Cancel")
+        ? `⚠️ Flight ${notif.flightNo} has been cancelled due to unforeseen circumstances. Please reach out to our admin for a refund.`
+        : `⚠️ Details for Flight ${notif.flightNo} have been updated. Please check out new details.`;
+
+      const closeBtn = document.createElement("button");
+      closeBtn.className = "notification-btn notification-ok";
+      closeBtn.textContent = "Close";
+
+      closeBtn.onclick = () => {
+        box.remove();
+        remaining--;
+        if (remaining === 0) {
+          document.body.removeChild(modal);
+          const res = window.deleteUserNotifications(userpass);
+          console.log("Deleted notifications:", res);
+          FS.syncfs(false, function (err) {
+            if (err) console.error("Failed to sync:", err);
+            else console.log("Synced to IndexedDB.");
+          });
+        }
+      };
+
+      box.appendChild(message);
+      box.appendChild(closeBtn);
+      modal.appendChild(box);
+    }
+  });
+
+  // Only add modal if there are notifications
+  if (remaining > 0) {
+    document.body.appendChild(modal);
+  }
+}
+
+
+async function generateItinerary(user, flight) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF("p", "mm", "a4");
+  const pageWidth = doc.internal.pageSize.getWidth();
+  const pageHeight = doc.internal.pageSize.getHeight();
+
+  // === Banner Setup ===
+  const bannerImg = document.getElementById("bg");
+  const bannerCanvas = document.createElement("canvas");
+  bannerCanvas.width = bannerImg.width;
+  bannerCanvas.height = bannerImg.height;
+  const bctx = bannerCanvas.getContext("2d");
+  bctx.drawImage(bannerImg, 0, 0);
+  bctx.fillStyle = "rgba(0, 0, 0, 0.62)";
+  bctx.fillRect(0, 0, bannerCanvas.width, bannerCanvas.height);
+  const bannerData = bannerCanvas.toDataURL("image/jpeg");
+
+  doc.addImage(
+    bannerData,
+    "JPEG",
+    -10,
+    0,
+    pageWidth + pageWidth * 0.5,
+    pageHeight
+  );
+
+  // === Logo ===
+  const logo = document.getElementById("logo");
+  const logoCanvas = document.createElement("canvas");
+  logoCanvas.width = logo.width;
+  logoCanvas.height = logo.height;
+  const lctx = logoCanvas.getContext("2d");
+  lctx.drawImage(logo, 0, 0);
+  const logoData = logoCanvas.toDataURL("image/png");
+  doc.addImage(logoData, "PNG", 10, 5, 15, 15);
+
+  // === Title Text ===
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.setFontSize(16);
+  doc.text("Skycoders Airline", 30, 15);
+  doc.setFontSize(12);
+  doc.text("Flight Itinerary", pageWidth - 50, 15);
+
+  // === White Card ===
+  const cardX = 10;
+  const cardY = 35;
+  const cardWidth = pageWidth - 20;
+  const cardHeight = 210;
+  const cardRadius = 3;
+  const paddingX = 15;
+  let y = cardY + 10;
+
+  doc.setDrawColor(200);
+  doc.setFillColor(255, 255, 255);
+  doc.roundedRect(
+    cardX,
+    cardY,
+    cardWidth,
+    cardHeight,
+    cardRadius,
+    cardRadius,
+    "FD"
+  );
+
+  // === Columns ===
+  const leftX = cardX + paddingX;
+  const midX = leftX + 65;
+  const rightX = leftX + 130;
+
+  // === Passenger Info ===
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(0, 0, 0);
+  doc.setFontSize(12);
+  doc.text("Passenger Name:", leftX, y);
+  doc.text("Passport No:", midX, y);
+  doc.text("Nationality:", rightX, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(user.name || "-", leftX, y);
+  doc.text(user.passport || "-", midX, y);
+  doc.text(user.nationality || "-", rightX, y);
+
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Contact:", leftX, y);
+  doc.setFont("helvetica", "normal");
+  doc.text(user.contact || "-", leftX + 25, y);
+
+  // === Divider Line ===
+  y += 5;
+  doc.setDrawColor(220);
+  doc.line(leftX, y, pageWidth - paddingX, y);
+  y += 10;
+
+  // === Flight Info ===
+  doc.setFont("helvetica", "bold");
+  doc.text("Flight No:", leftX, y);
+  doc.text("From:", midX, y);
+  doc.text("To:", rightX, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(flight.flightNumber || "-", leftX, y);
+  doc.text(flight.departure || "-", midX, y);
+  doc.text(flight.destination || "-", rightX, y);
+
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Departure Date:", leftX, y);
+  doc.text("Arrival Date:", midX, y);
+  doc.text("Stops:", rightX, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(flight.departDate || "-", leftX, y);
+  doc.text(flight.arrivalDate || "-", midX, y);
+  doc.text(flight.stopCount?.toString() || "-", rightX, y);
+
+  // === Stops ===
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Flight Stops:", leftX, y);
+  doc.setFont("helvetica", "normal");
+  if (flight.stops && flight.stops.length > 0) {
+    const stopsText = flight.stops.join(", ");
+    const wrappedStops = doc.splitTextToSize(
+      stopsText,
+      cardWidth - 2 * paddingX
+    );
+    y += 6;
+    doc.text(wrappedStops, leftX, y);
+    y += wrappedStops.length * 6;
+  } else {
+    doc.text("None", leftX + 30, y);
+    y += 7;
+  }
+
+  // === Time Info (Better aligned) ===
+  y += 8;
+  doc.setFont("helvetica", "bold");
+  doc.text("Departure Time:", leftX, y);
+  doc.text("Arrival Time:", midX + 10, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(flight.Dtime || "-", leftX, y);
+  doc.text(flight.Atime || "-", midX + 10, y);
+
+  // === Fare ===
+  y += 10;
+  doc.setFont("helvetica", "bold");
+  doc.text("Fare (INR):", leftX, y);
+  y += 7;
+  doc.setFont("helvetica", "normal");
+  doc.text(`₹${flight.price}`, leftX, y);
+
+  // === QR Code ===
+  y += 15;
+  const qrText = `Flight: ${flight.flightNumber}, Name: ${user.name}, Passport: ${user.passport}`;
+  const qrDataURL = await QRCode.toDataURL(qrText);
+  doc.setFont("helvetica", "bold");
+  doc.text("Verification QR Code:", leftX, y);
+  doc.addImage(qrDataURL, "PNG", leftX, y + 5, 40, 40);
+
+  // === Luggage Info ===
+  const luggageY = cardY + cardHeight + 15;
+  doc.setFont("helvetica", "bold");
+  doc.setTextColor(255, 255, 255);
+  doc.text("Luggage & Baggage Policy", 10, luggageY);
+  doc.setFontSize(11);
+  doc.text(
+    "Cabin Bag: 7kg | Check-in: 20kg | Extra Baggage: ₹500/kg",
+    10,
+    luggageY + 7
+  );
+  doc.text(
+    "Note: Reach airport at least 2 hours before departure time.",
+    10,
+    luggageY + 14
+  );
+
+  // === Footer ===
+  doc.setFontSize(10);
+  doc.text(
+    "Thank you for flying with Skycoders Airline. Safe travels!",
+    10,
+    pageHeight - 15
+  );
+  doc.text("© Skycoders Airline 2025", pageWidth - 50, pageHeight - 10);
+
+  // === Save ===
+  doc.save("Skycoders-Itinerary.pdf");
+}
+
+
+
+  </script>
+  <script src="/Modules/interface.js"></script>
+</body>
+</html>

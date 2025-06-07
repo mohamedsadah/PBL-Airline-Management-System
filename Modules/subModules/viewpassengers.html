@@ -6,6 +6,11 @@
   <title>Admin Dashboard - Skycoders</title>
   <link rel="stylesheet" href="operations.css">
   <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+
 </head>
 <body>
   <div class="dashboard">
@@ -20,7 +25,6 @@
         <li><a href="../subModules/update.html">Update Flight</a></li>
         <li><a href="../subModules/cancel.html">Cancel Flight</a></li>
         <li><a href="#">View Passengers</a></li>
-        <li><a href="../subModules/viewbookings.html">View Bookings</a></li>
         <li class="logout"><a href="/Modules/login.html">Logout</a></li>
       </ul>
     </aside>
@@ -34,10 +38,12 @@
                 <span>Skycoders Airline Management System</span>
             </div>
         </div>
-
+        <div class="top-details">
+          
           <input type="text" class="srch" placeholder="Search Passengers by name,passport number or flight number">
-        
-        <div id="passengerContainer" class="passenger-list">
+          <div id="no-display"></div>
+          <div id="passengerContainer" class="passenger-list">
+        </div>
 
         </div>
         </div>
@@ -45,6 +51,7 @@
       <script>
 
         let passengers =[]; 
+        let allflights = [];
         const searchInput = document.querySelector(".srch");
 
         function handleSearchInput() {
@@ -72,6 +79,11 @@
               }
 
               Module.ccall("loadPassengers", null, [], []);
+              Module.ccall('loadFlightsFromFile', null, [], []);
+              const getAllFlightsJSON = Module.cwrap('getAllFlightsJSON', 'string', [], []);
+
+              const jsonData = getAllFlightsJSON();
+              allflights = JSON.parse(jsonData);
 
               const ptr = Module.ccall('getAllPassengersJSON', 'number', []);
               const Pjson = Module.UTF8ToString(ptr);
@@ -86,38 +98,262 @@
           }
         }
 
+    function viewDetails(button) {
+    const card = button.closest(".passenger-card-glass");
+    const flightNum = card.querySelector(".flightno").textContent.split(":")[1].trim();
 
-      function renderPassengers(passengers) {
-      const container = document.getElementById('passengerContainer');
-      container.innerHTML = ''; 
+    const flight = allflights.find(f => f.flightNumber.trim() === flightNum);
+    if (!flight) return alert("Flight not found");
 
-      passengers.forEach(p => {
-        const card = document.createElement('div');
-        card.className = 'card';
-        card.innerHTML = `<div class="cardBDrop">
-          <h2>${p.Name}</h2>
+    // Remove any existing hero
+    document.querySelector('.flight-hero')?.remove();
+
+    // === Hero Container ===
+    const hero = document.createElement('div');
+    hero.className = 'flight-hero';
+    hero.style.cssText = `
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100vw;
+        height: 100vh;
+        background: rgba(0, 0, 0, 0.88);
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        z-index: 9999;
+        animation: fadeIn 0.5s ease forwards;
+    `;
+
+    // === Inner Content Box ===
+    const box = document.createElement('div');
+    box.style.cssText = `
+        background: #1e1e2f;
+        border-radius: 20px;
+        padding: 30px 40px;
+        max-width: 1000px;
+        width: 90%;
+        color: #f1f1f1;
+        font-family: 'Outfit', sans-serif;
+        box-shadow: 0 15px 30px rgba(0,0,0,0.5);
+        display: flex;
+        gap: 30px;
+        flex-wrap: wrap;
+        transform: scale(0.95);
+        animation: scaleIn scaleOut 0.4s ease forwards;
+    `;
+
+    // === Close Button ===
+    const close = document.createElement('button');
+    close.textContent = "Close ✕";
+    close.style.cssText = `
+        position: absolute;
+        top: 30px;
+        right: 40px;
+        background: #ff4d5a;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        font-weight: bold;
+        border-radius: 12px;
+        cursor: pointer;
+        font-size: 14px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+    `;
+    close.onclick = () => hero.remove();
+
+    // === Image ===
+    const img = document.createElement('img');
+    img.src = '/images/fl.jpg';
+    img.alt = 'Flight Image';
+    img.style.cssText = `
+        width: 250px;
+        height: auto;
+        border-radius: 15px;
+        object-fit: cover;
+    `;
+
+    // === Details Column ===
+    const info = document.createElement('div');
+    info.style.flex = '1';
+    info.style.minWidth = '280px';
+
+    const makeRow = (label, value, color = '#9efffa') => {
+        const row = document.createElement('p');
+        row.style.cssText = `
+            margin: 12px 0;
+            font-size: 16px;
+            background: #2b2b44;
+            padding: 12px 15px;
+            border-radius: 12px;
+        `;
+        row.innerHTML = `<strong style="color: ${color};">${label}:</strong> <span style="color: #f0f0f0;">${value}</span>`;
+        return row;
+    };
+
+    info.appendChild(makeRow("Flight Number", flight.flightNumber, "#f6a"));
+    info.appendChild(makeRow("Route", `${flight.departure} → ${flight.destination}`, "#fdc"));
+    info.appendChild(makeRow("Departure", `${flight.departDate} at ${flight.Dtime}`, "#ffa07a"));
+    info.appendChild(makeRow("Arrival", `${flight.arrivalDate} at ${flight.Atime}`, "#7fffd4"));
+    info.appendChild(makeRow("Price", `₹${flight.price}`, "#f3b"));
+    info.appendChild(makeRow("Seats", flight.seats > 0 ? flight.seats : "Full", "#dcf"));
+    info.appendChild(makeRow("Status", flight.status, "#af8"));
+    info.appendChild(makeRow("Stops", 
+        (flight.stops && flight.stops.length > 0) 
+            ? flight.stops.join(", ") 
+            : "None", "#baf"));
+
+    // Append to box and then to hero
+    box.appendChild(img);
+    box.appendChild(info);
+    hero.appendChild(box);
+    hero.appendChild(close);
+    document.body.appendChild(hero);
+}
+
+function renderPassengers(passengers) {
+  const container = document.getElementById('passengerContainer');
+  const display = document.getElementById('no-display');
+
+  container.innerHTML = ''; 
+
+  if (passengers.length === 0) {
+    const noResult = document.createElement('div');
+    noResult.textContent = 'No Bookings.';
+    noResult.classList.add("no-flight-display");
+    display.appendChild(noResult);
+    return;
+  }
+
+  passengers.forEach(p => {
+    const card = document.createElement('div');
+    card.className = 'passenger-card-glass';
+    card.innerHTML = `
+      <div class="passenger-card-content">
+        <h2 class="passenger-name">${p.Name}</h2>
+        <div class="passenger-info">
           <p><span class="label">Passport:</span> ${p.PassportNumber}</p>
           <p><span class="label">Nationality:</span> ${p.Nationality}</p>
           <p><span class="label">Contact:</span> ${p.contact}</p>
-          <div><p><button class="details"> ${p.flightNumber}</button></p></div>
-          </div>
-          <button class="ticket"> Generate Ticket </button>
+          <p><span class="label">Seat No:</span> ${p.seatNo}</p>
+          <p class="flightno"><span class="label">Flight No:</span> ${p.flightNumber}</p>
+        </div>
+        <div class="passenger-actions">
+          <button class="primary-btn" onclick="viewDetails(this)">View Details</button>
+          <button class="secondary-btn">🎫 Generate Boarding Pass</button>
+        </div>
+      </div>
+    `;
 
-        `;
-        container.appendChild(card);
-      });
+    const btn = card.querySelector('.secondary-btn');
+    btn.addEventListener('click', () => {
+      const passenger = {
+        name: p.Name,
+        passport: p.PassportNumber,
+        nationality: p.Nationality,
+        contact: p.contact,
+        seatNo: p.seatNo,
+        flightNo: p.flightNumber
+      };
+      generateBoardingPassPDF(passenger);
+    });
 
-      if (passengers.length === 0) {
-              const noResult = document.createElement('div');
-              noResult.textContent = 'No Passengers available';
-              noResult.classList.add("no-flight-display");
-              container.appendChild(noResult);
-              return;
-            }
+    container.appendChild(card);
+  });
+}
+
+async function generateBoardingPassPDF(passenger) {
+  const { jsPDF } = window.jspdf;
+
+  const doc = new jsPDF({
+    orientation: 'landscape',
+    unit: 'mm',
+    format: [210, 74],
+    putOnlyUsedFonts: true,
+  });
+
+  const flight = allflights.find(f => f.flightNumber.trim() === passenger.flightNo.trim());
+
+  const qr = new QRious({
+    value: `Passenger: ${passenger.name}\nPassportNo: ${passenger.passport}\nFlight: ${passenger.flightNo}\nSeat: ${passenger.seatNo}`,
+    size: 100
+  });
+
+  const qrImg = qr.toDataURL();
+
+  const gradient = doc.context2d.createLinearGradient(0, 0, 210, 74);
+  gradient.addColorStop(0, '#101928');
+  gradient.addColorStop(1, '#0a0e17');
+  doc.context2d.fillStyle = gradient;
+  doc.context2d.fillRect(0, 0, 210, 74);
+
+  doc.setFont("helvetica", "bold");
+  doc.setFontSize(18);
+  doc.setTextColor(0, 255, 210);
+  doc.text("SKYCODERS AIRLINES", 8, 12);
+
+doc.setFontSize(11);
+doc.setFont("helvetica", "normal");
+
+doc.setTextColor(255, 165, 0); 
+doc.text("Name:", 8, 24);
+
+doc.setTextColor(255, 255, 255); 
+doc.text(`${passenger.name}`, 35, 24);
+
+doc.setTextColor(255, 165, 0);
+doc.text("Passport:", 8, 32);
+
+doc.setTextColor(255, 255, 255);
+doc.text(`${passenger.passport}`, 35, 32);
+
+doc.setTextColor(255, 165, 0);
+doc.text("Seat No:", 8, 40);
+
+doc.setTextColor(255, 255, 255);
+doc.text(`${passenger.seatNo}`, 35, 40);
+
+doc.setTextColor(255, 165, 0);
+doc.text("Flight No:", 8, 48);
+
+doc.setTextColor(255, 255, 255);
+doc.text(`${passenger.flightNo}`, 35, 48);
 
 
+  if (flight) {
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 165, 0);
+    doc.text("Route: ", 85, 20);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${flight.departure} ➝ ${flight.destination}`, 85, 26);
 
-    }
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(0, 255, 200);
+    doc.text("Departure: ", 85, 34);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${flight.departDate} @ ${flight.Dtime}`, 85, 40);
+
+    doc.setFont("helvetica", "bold");
+    doc.setTextColor(255, 120, 200);
+    doc.text("Arrival: ", 85, 48);
+    doc.setFont("helvetica", "normal");
+    doc.setTextColor(255, 255, 255);
+    doc.text(`${flight.arrivalDate} @ ${flight.Atime}`, 85, 54);
+  }
+
+  doc.addImage(qrImg, 'PNG', 165, 16, 32, 32);
+
+  doc.setFontSize(8);
+  doc.setTextColor(180, 180, 180);
+  doc.text("Boarding confirmed. Please arrive 45 minutes before departure.", 8, 69);
+  doc.text("Thank you for flying with Skycoders", 140, 69);
+
+  doc.save(`BoardingPass_${passenger.name}_${passenger.flightNo}.pdf`);
+}
+
+      
       </script>
 
       <script src="/Modules/interface.js"></script>
