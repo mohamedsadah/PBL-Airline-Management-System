@@ -6,7 +6,7 @@
 #include <emscripten/emscripten.h>
 
 #define MAX_FIELD_SIZE 128
-#define max 5
+#define max 1
 #define BUFFER_SIZE 5
 
 // Store the credentials file under the persistent directory.
